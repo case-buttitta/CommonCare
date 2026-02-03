@@ -1,4 +1,6 @@
 from flask import Blueprint, jsonify, request
+import subprocess
+import os
 from app import db
 from app.models import User
 
@@ -29,7 +31,11 @@ def create_user():
     if User.query.filter_by(email=data['email']).first():
         return jsonify({'error': 'Email already exists'}), 400
 
-    user = User(username=data['username'], email=data['email'])
+    role = data.get('role', 'patient')
+    if role not in ['patient', 'staff']:
+        return jsonify({'error': 'Role must be either patient or staff'}), 400
+
+    user = User(username=data['username'], email=data['email'], role=role)
     db.session.add(user)
     db.session.commit()
 
@@ -48,3 +54,37 @@ def delete_user(user_id):
     db.session.delete(user)
     db.session.commit()
     return jsonify({'message': 'User deleted successfully'})
+
+
+@main.route('/api/db/export', methods=['POST'])
+def export_db():
+    try:
+        users = User.query.all()
+        
+        sql_content = """-- Initialize CommonCare test database
+
+CREATE TABLE IF NOT EXISTS users (
+    id SERIAL PRIMARY KEY,
+    username VARCHAR(80) UNIQUE NOT NULL,
+    email VARCHAR(120) UNIQUE NOT NULL,
+    role VARCHAR(20) NOT NULL DEFAULT 'patient' CHECK (role IN ('patient', 'staff')),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Seed test data
+"""
+        if users:
+            sql_content += "INSERT INTO users (username, email, role) VALUES\n"
+            user_values = []
+            for user in users:
+                user_values.append(f"    ('{user.username}', '{user.email}', '{user.role}')")
+            sql_content += ",\n".join(user_values)
+            sql_content += "\nON CONFLICT DO NOTHING;\n"
+        
+        db_path = os.environ.get('DB_EXPORT_PATH', '/db/init.sql')
+        with open(db_path, 'w') as f:
+            f.write(sql_content)
+        
+        return jsonify({'message': 'Database exported successfully', 'path': db_path})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

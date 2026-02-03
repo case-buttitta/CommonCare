@@ -5,7 +5,7 @@ function App() {
   const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
-  const [newUser, setNewUser] = useState({ username: '', email: '' })
+  const [newUser, setNewUser] = useState({ username: '', email: '', role: 'patient' })
   const [apiStatus, setApiStatus] = useState(null)
 
   const fetchUsers = async () => {
@@ -49,7 +49,7 @@ function App() {
         const errData = await response.json()
         throw new Error(errData.error || 'Failed to create user')
       }
-      setNewUser({ username: '', email: '' })
+      setNewUser({ username: '', email: '', role: 'patient' })
       fetchUsers()
     } catch (err) {
       setError(err.message)
@@ -92,6 +92,14 @@ function App() {
               onChange={(e) => setNewUser({ ...newUser, email: e.target.value })}
               required
             />
+            <select
+              value={newUser.role}
+              onChange={(e) => setNewUser({ ...newUser, role: e.target.value })}
+              required
+            >
+              <option value="patient">Patient</option>
+              <option value="staff">Staff</option>
+            </select>
             <button type="submit">Add User</button>
           </form>
         </section>
@@ -110,6 +118,7 @@ function App() {
                   <th>ID</th>
                   <th>Username</th>
                   <th>Email</th>
+                  <th>Role</th>
                   <th>Created</th>
                   <th>Actions</th>
                 </tr>
@@ -120,6 +129,7 @@ function App() {
                     <td>{user.id}</td>
                     <td>{user.username}</td>
                     <td>{user.email}</td>
+                    <td className={`role-badge ${user.role}`}>{user.role}</td>
                     <td>{new Date(user.created_at).toLocaleDateString()}</td>
                     <td>
                       <button className="delete-btn" onClick={() => handleDelete(user.id)}>
