@@ -11,6 +11,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db:/db
     ports:
       - "5432:5432"
     healthcheck:
@@ -25,15 +26,17 @@ services:
       dockerfile: Dockerfile
     container_name: commoncare-backend
     environment:
-      DATABASE_URL: postgresql://postgres:postgres@db:5432/commoncare
+      DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/commoncare
       SECRET_KEY: docker-secret-key
       FLASK_ENV: development
+      DB_EXPORT_PATH: /db/init.sql
     ports:
       - "5000:5000"
     depends_on:
       - db
     volumes:
       - ./backend:/app
+      - ./db:/db
     restart: on-failure
 
   frontend:
