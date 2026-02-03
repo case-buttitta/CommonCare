@@ -2,6 +2,15 @@
 
 React + Flask + PostgreSQL
 
+You need:
+- Docker
+- Python 3.11
+
+pip install -r requirements.txt
+
+to run  tests:
+python -m pytest tests            
+              
 ## Quick Start (Docker)
 
 **Prerequisites:** Docker
