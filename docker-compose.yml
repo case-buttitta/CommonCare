@@ -1,5 +1,6 @@
 services:
   db:
+    profiles: ["dev", "prod"]
     image: postgres:15-alpine
     container_name: commoncare-db
     environment:
@@ -19,6 +20,7 @@ services:
       retries: 5
 
   backend:
+    profiles: ["dev", "prod"]
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -38,10 +40,23 @@ services:
     restart: on-failure
 
   frontend:
+    profiles: ["dev"]
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports:
+      - "5173:5173"
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+
+  frontend-prod:
+    profiles: ["prod"]
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: commoncare-frontend
     ports:
       - "8080:80"
     depends_on:
