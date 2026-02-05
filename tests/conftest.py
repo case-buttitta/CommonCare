@@ -44,7 +44,7 @@ def sample_user_data():
 
 @pytest.fixture
 def api_base_url():
-    return os.environ.get('API_BASE_URL', 'http://localhost:5000')
+    return os.environ.get('API_BASE_URL', 'http://localhost:5001')
 
 
 @pytest.fixture
