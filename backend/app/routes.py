@@ -1,8 +1,7 @@
 from flask import Blueprint, jsonify, request
-import subprocess
-import os
 from app import db
 from app.models import User
+from app.auth import generate_token, token_required
 
 main = Blueprint('main', __name__)
 
@@ -12,79 +11,80 @@ def health_check():
     return jsonify({'status': 'healthy', 'message': 'API is running'})
 
 
-@main.route('/api/users', methods=['GET'])
-def get_users():
-    users = User.query.all()
-    return jsonify([user.to_dict() for user in users])
-
-
-@main.route('/api/users', methods=['POST'])
-def create_user():
+@main.route('/api/auth/signup', methods=['POST'])
+def signup():
     data = request.get_json()
 
-    if not data or not data.get('username') or not data.get('email'):
-        return jsonify({'error': 'Username and email are required'}), 400
+    # Validate required fields
+    required_fields = ['email', 'password', 'full_name', 'user_type']
+    for field in required_fields:
+        if not data or not data.get(field):
+            return jsonify({'error': f'{field} is required'}), 400
 
-    if User.query.filter_by(username=data['username']).first():
-        return jsonify({'error': 'Username already exists'}), 400
+    # Validate user_type
+    if data['user_type'] not in ['patient', 'staff']:
+        return jsonify({'error': 'user_type must be either patient or staff'}), 400
 
+    # Check if email already exists
     if User.query.filter_by(email=data['email']).first():
-        return jsonify({'error': 'Email already exists'}), 400
+        return jsonify({'error': 'Email already registered'}), 400
 
-    role = data.get('role', 'patient')
-    if role not in ['patient', 'staff']:
-        return jsonify({'error': 'Role must be either patient or staff'}), 400
+    # Validate password length
+    if len(data['password']) < 6:
+        return jsonify({'error': 'Password must be at least 6 characters'}), 400
 
-    user = User(username=data['username'], email=data['email'], role=role)
+    # Create new user
+    user = User(
+        email=data['email'],
+        full_name=data['full_name'],
+        address=data.get('address', ''),
+        location=data.get('location', 'Charlotte'),
+        user_type=data['user_type']
+    )
+    user.set_password(data['password'])
+
     db.session.add(user)
     db.session.commit()
 
-    return jsonify(user.to_dict()), 201
+    token = generate_token(user.id)
+
+    return jsonify({
+        'message': 'Account created successfully',
+        'token': token,
+        'user': user.to_dict()
+    }), 201
 
 
-@main.route('/api/users/<int:user_id>', methods=['GET'])
-def get_user(user_id):
-    user = User.query.get_or_404(user_id)
-    return jsonify(user.to_dict())
+@main.route('/api/auth/login', methods=['POST'])
+def login():
+    data = request.get_json()
+
+    if not data or not data.get('email') or not data.get('password'):
+        return jsonify({'error': 'Email and password are required'}), 400
+
+    user = User.query.filter_by(email=data['email']).first()
+
+    if not user or not user.check_password(data['password']):
+        return jsonify({'error': 'Invalid email or password'}), 401
+
+    token = generate_token(user.id)
+
+    return jsonify({
+        'message': 'Login successful',
+        'token': token,
+        'user': user.to_dict()
+    })
 
 
-@main.route('/api/users/<int:user_id>', methods=['DELETE'])
-def delete_user(user_id):
-    user = User.query.get_or_404(user_id)
-    db.session.delete(user)
+@main.route('/api/auth/me', methods=['GET'])
+@token_required
+def get_current_user(current_user):
+    return jsonify(current_user.to_dict())
+
+
+@main.route('/api/auth/account', methods=['DELETE'])
+@token_required
+def delete_account(current_user):
+    db.session.delete(current_user)
     db.session.commit()
-    return jsonify({'message': 'User deleted successfully'})
-
-
-@main.route('/api/db/export', methods=['POST'])
-def export_db():
-    try:
-        users = User.query.all()
-        
-        sql_content = """-- Initialize CommonCare test database
-
-CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    username VARCHAR(80) UNIQUE NOT NULL,
-    email VARCHAR(120) UNIQUE NOT NULL,
-    role VARCHAR(20) NOT NULL DEFAULT 'patient' CHECK (role IN ('patient', 'staff')),
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
-
--- Seed test data
-"""
-        if users:
-            sql_content += "INSERT INTO users (username, email, role) VALUES\n"
-            user_values = []
-            for user in users:
-                user_values.append(f"    ('{user.username}', '{user.email}', '{user.role}')")
-            sql_content += ",\n".join(user_values)
-            sql_content += "\nON CONFLICT DO NOTHING;\n"
-        
-        db_path = os.environ.get('DB_EXPORT_PATH', '/db/init.sql')
-        with open(db_path, 'w') as f:
-            f.write(sql_content)
-        
-        return jsonify({'message': 'Database exported successfully', 'path': db_path})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
+    return jsonify({'message': 'Account deleted successfully'})
