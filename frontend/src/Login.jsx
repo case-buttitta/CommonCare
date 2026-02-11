@@ -21,6 +21,11 @@ export default function Login({ onSwitchToSignup }) {
         }
     };
 
+    const quickLogin = (testEmail) => {
+        setEmail(testEmail);
+        setPassword('password123');
+    };
+
     return (
         <div className="auth-container">
             <div className="auth-card">
@@ -60,6 +65,26 @@ export default function Login({ onSwitchToSignup }) {
                         {loading ? 'Signing in...' : 'Sign In'}
                     </button>
                 </form>
+
+                <div className="test-accounts">
+                    <div className="test-accounts-header">
+                        <span className="test-badge">TEST ENV</span>
+                        <span>Test Account Credentials</span>
+                    </div>
+                    <div className="test-account-row">
+                        <div className="test-account-info">
+                            <strong>Patient:</strong> patient@test.com
+                        </div>
+                        <button className="btn-quick-login" onClick={() => quickLogin('patient@test.com')}>Use</button>
+                    </div>
+                    <div className="test-account-row">
+                        <div className="test-account-info">
+                            <strong>Staff:</strong> doctor@test.com
+                        </div>
+                        <button className="btn-quick-login" onClick={() => quickLogin('doctor@test.com')}>Use</button>
+                    </div>
+                    <div className="test-account-pw">Password: <code>password123</code></div>
+                </div>
 
                 <div className="auth-footer">
                     <p>Don't have an account? <button onClick={onSwitchToSignup} className="link-button">Create one</button></p>

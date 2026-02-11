@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 from app import db
-from app.models import User
+from app.models import User, Appointment, BiomarkerReading
 from app.auth import generate_token, token_required
+from datetime import datetime
 
 main = Blueprint('main', __name__)
 
@@ -11,29 +12,26 @@ def health_check():
     return jsonify({'status': 'healthy', 'message': 'API is running'})
 
 
+# ── Auth Routes ──────────────────────────────────────────────────────────────
+
 @main.route('/api/auth/signup', methods=['POST'])
 def signup():
     data = request.get_json()
 
-    # Validate required fields
     required_fields = ['email', 'password', 'full_name', 'user_type']
     for field in required_fields:
         if not data or not data.get(field):
             return jsonify({'error': f'{field} is required'}), 400
 
-    # Validate user_type
     if data['user_type'] not in ['patient', 'staff']:
         return jsonify({'error': 'user_type must be either patient or staff'}), 400
 
-    # Check if email already exists
     if User.query.filter_by(email=data['email']).first():
         return jsonify({'error': 'Email already registered'}), 400
 
-    # Validate password length
     if len(data['password']) < 6:
         return jsonify({'error': 'Password must be at least 6 characters'}), 400
 
-    # Create new user
     user = User(
         email=data['email'],
         full_name=data['full_name'],
@@ -88,3 +86,182 @@ def delete_account(current_user):
     db.session.delete(current_user)
     db.session.commit()
     return jsonify({'message': 'Account deleted successfully'})
+
+
+# ── Staff Listing ────────────────────────────────────────────────────────────
+
+@main.route('/api/staff', methods=['GET'])
+@token_required
+def list_staff(current_user):
+    """List all staff members (for appointment booking dropdown)."""
+    staff = User.query.filter_by(user_type='staff').all()
+    return jsonify([s.to_dict() for s in staff])
+
+
+# ── Patient Listing (staff only) ────────────────────────────────────────────
+
+@main.route('/api/patients', methods=['GET'])
+@token_required
+def list_patients(current_user):
+    """List all patients. Staff only."""
+    if current_user.user_type != 'staff':
+        return jsonify({'error': 'Staff access required'}), 403
+    patients = User.query.filter_by(user_type='patient').all()
+    return jsonify([p.to_dict() for p in patients])
+
+
+# ── Appointments ─────────────────────────────────────────────────────────────
+
+@main.route('/api/appointments', methods=['GET'])
+@token_required
+def list_appointments(current_user):
+    """
+    Patient: returns own appointments.
+    Staff: returns all appointments (or filtered by patient_id query param).
+    """
+    if current_user.user_type == 'staff':
+        patient_id = request.args.get('patient_id', type=int)
+        if patient_id:
+            appointments = Appointment.query.filter_by(patient_id=patient_id) \
+                .order_by(Appointment.appointment_date.desc()).all()
+        else:
+            appointments = Appointment.query \
+                .order_by(Appointment.appointment_date.desc()).all()
+    else:
+        appointments = Appointment.query.filter_by(patient_id=current_user.id) \
+            .order_by(Appointment.appointment_date.desc()).all()
+
+    return jsonify([a.to_dict() for a in appointments])
+
+
+@main.route('/api/appointments', methods=['POST'])
+@token_required
+def create_appointment(current_user):
+    """Patient creates a new appointment."""
+    if current_user.user_type != 'patient':
+        return jsonify({'error': 'Only patients can book appointments'}), 403
+
+    data = request.get_json()
+
+    if not data or not data.get('doctor_id') or not data.get('appointment_date'):
+        return jsonify({'error': 'doctor_id and appointment_date are required'}), 400
+
+    # Verify doctor exists and is staff
+    doctor = User.query.get(data['doctor_id'])
+    if not doctor or doctor.user_type != 'staff':
+        return jsonify({'error': 'Invalid doctor selected'}), 400
+
+    try:
+        appt_date = datetime.fromisoformat(data['appointment_date'])
+    except (ValueError, TypeError):
+        return jsonify({'error': 'Invalid date format'}), 400
+
+    appointment = Appointment(
+        patient_id=current_user.id,
+        doctor_id=data['doctor_id'],
+        appointment_date=appt_date,
+        status='pending',
+        reason=data.get('reason', '')
+    )
+
+    db.session.add(appointment)
+    db.session.commit()
+
+    return jsonify(appointment.to_dict()), 201
+
+
+@main.route('/api/appointments/<int:appointment_id>', methods=['GET'])
+@token_required
+def get_appointment(current_user, appointment_id):
+    """Get a single appointment with its biomarker readings."""
+    appointment = Appointment.query.get_or_404(appointment_id)
+
+    # Access control
+    if current_user.user_type == 'patient' and appointment.patient_id != current_user.id:
+        return jsonify({'error': 'Access denied'}), 403
+
+    return jsonify(appointment.to_dict())
+
+
+@main.route('/api/appointments/<int:appointment_id>', methods=['PUT'])
+@token_required
+def update_appointment(current_user, appointment_id):
+    """Staff submits appointment results (biomarker readings, notes, status)."""
+    if current_user.user_type != 'staff':
+        return jsonify({'error': 'Staff access required'}), 403
+
+    appointment = Appointment.query.get_or_404(appointment_id)
+    data = request.get_json()
+
+    # Update status and notes
+    if 'status' in data:
+        appointment.status = data['status']
+    if 'notes' in data:
+        appointment.notes = data['notes']
+
+    # Handle biomarker readings
+    if 'biomarker_readings' in data:
+        # Clear existing readings for this appointment
+        BiomarkerReading.query.filter_by(appointment_id=appointment.id).delete()
+
+        for reading in data['biomarker_readings']:
+            br = BiomarkerReading(
+                appointment_id=appointment.id,
+                biomarker_type=reading['biomarker_type'],
+                value=reading['value'],
+                unit=reading.get('unit', 'mmHg')
+            )
+            db.session.add(br)
+
+    db.session.commit()
+    return jsonify(appointment.to_dict())
+
+
+# ── Biomarkers ───────────────────────────────────────────────────────────────
+
+@main.route('/api/patients/<int:patient_id>/biomarkers', methods=['GET'])
+@token_required
+def get_patient_biomarkers(current_user, patient_id):
+    """
+    Get biomarker data for a patient.
+    Returns latest readings + full history grouped by type.
+    """
+    # Access control
+    if current_user.user_type == 'patient' and current_user.id != patient_id:
+        return jsonify({'error': 'Access denied'}), 403
+
+    # Get all completed appointments for this patient, ordered by date
+    appointments = Appointment.query.filter_by(
+        patient_id=patient_id,
+        status='completed'
+    ).order_by(Appointment.appointment_date.asc()).all()
+
+    # Build history by biomarker type
+    history = {}
+    for appt in appointments:
+        for reading in appt.biomarker_readings:
+            if reading.biomarker_type not in history:
+                history[reading.biomarker_type] = []
+            history[reading.biomarker_type].append({
+                'value': reading.value,
+                'unit': reading.unit,
+                'date': appt.appointment_date.isoformat(),
+                'appointment_id': appt.id,
+                'doctor_name': appt.doctor.full_name if appt.doctor else None,
+            })
+
+    # Latest readings (last entry per type)
+    latest = {}
+    for btype, readings in history.items():
+        latest[btype] = readings[-1] if readings else None
+
+    # Previous readings (second to last per type, for trend)
+    previous = {}
+    for btype, readings in history.items():
+        previous[btype] = readings[-2] if len(readings) >= 2 else None
+
+    return jsonify({
+        'latest': latest,
+        'previous': previous,
+        'history': history,
+    })
