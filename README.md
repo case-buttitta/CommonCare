@@ -23,7 +23,7 @@ python -m pytest tests
 start.bat
 ```
 
-App runs at **http://localhost:8080**
+App runs at **http://localhost:5173**
 
 ## Stop
 
