@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from app import db
-from app.models import User, Appointment, BiomarkerReading
+from app.models import User, Appointment, BiomarkerReading, MedicalHistory
 from app.auth import generate_token, token_required
 from datetime import datetime
 
@@ -260,8 +260,90 @@ def get_patient_biomarkers(current_user, patient_id):
     for btype, readings in history.items():
         previous[btype] = readings[-2] if len(readings) >= 2 else None
 
+
     return jsonify({
         'latest': latest,
         'previous': previous,
         'history': history,
     })
+
+
+# ── Medical History ──────────────────────────────────────────────────────────
+
+@main.route('/api/patients/<int:patient_id>/history', methods=['GET'])
+@token_required
+def get_medical_history(current_user, patient_id):
+    """
+    Get medical history for a patient.
+    Accessible by: Patient (own history), Staff (any patient).
+    """
+    if current_user.user_type == 'patient' and current_user.id != patient_id:
+        return jsonify({'error': 'Access denied'}), 403
+    
+    # Verify patient exists
+    if not User.query.get(patient_id):
+        return jsonify({'error': 'Patient not found'}), 404
+
+    history = MedicalHistory.query.filter_by(patient_id=patient_id).order_by(MedicalHistory.created_at.desc()).all()
+    return jsonify([h.to_dict() for h in history])
+
+
+@main.route('/api/patients/<int:patient_id>/history', methods=['POST'])
+@token_required
+def add_medical_history(current_user, patient_id):
+    """Add a medical history record. Staff only."""
+    if current_user.user_type != 'staff':
+        return jsonify({'error': 'Staff access required'}), 403
+
+    data = request.get_json()
+    if not data or not data.get('condition'):
+        return jsonify({'error': 'Condition is required'}), 400
+
+    record = MedicalHistory(
+        patient_id=patient_id,
+        condition=data['condition'],
+        diagnosis_date=data.get('diagnosis_date', ''),
+        status=data.get('status', 'Active'),
+        notes=data.get('notes', '')
+    )
+    
+    db.session.add(record)
+    db.session.commit()
+    return jsonify(record.to_dict()), 201
+
+
+@main.route('/api/history/<int:record_id>', methods=['PUT'])
+@token_required
+def update_medical_history(current_user, record_id):
+    """Update a medical history record. Staff only."""
+    if current_user.user_type != 'staff':
+        return jsonify({'error': 'Staff access required'}), 403
+
+    record = MedicalHistory.query.get_or_404(record_id)
+    data = request.get_json()
+
+    if 'condition' in data:
+        record.condition = data['condition']
+    if 'diagnosis_date' in data:
+        record.diagnosis_date = data['diagnosis_date']
+    if 'status' in data:
+        record.status = data['status']
+    if 'notes' in data:
+        record.notes = data['notes']
+
+    db.session.commit()
+    return jsonify(record.to_dict())
+
+
+@main.route('/api/history/<int:record_id>', methods=['DELETE'])
+@token_required
+def delete_medical_history(current_user, record_id):
+    """Delete a medical history record. Staff only."""
+    if current_user.user_type != 'staff':
+        return jsonify({'error': 'Staff access required'}), 403
+
+    record = MedicalHistory.query.get_or_404(record_id)
+    db.session.delete(record)
+    db.session.commit()
+    return jsonify({'message': 'Record deleted successfully'})
+

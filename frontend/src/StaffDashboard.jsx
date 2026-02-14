@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import MedicalHistory from './components/MedicalHistory';
 
 export default function StaffDashboard() {
     const { user, token, logout, deleteAccount } = useAuth();
@@ -188,6 +189,11 @@ export default function StaffDashboard() {
                                                 <div className="patient-meta">
                                                     <span>{selectedPatient.email}</span>
                                                     <span>{selectedPatient.location}</span>
+                                                </div>
+
+                                                {/* Medical History */}
+                                                <div className="mb-6">
+                                                    <MedicalHistory patientId={selectedPatient.id} userType="staff" />
                                                 </div>
 
                                                 {/* Biomarkers */}

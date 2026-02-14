@@ -22,6 +22,10 @@ class User(db.Model):
     doctor_appointments = db.relationship(
         'Appointment', foreign_keys='Appointment.doctor_id', backref='doctor', lazy='dynamic'
     )
+    
+    medical_history = db.relationship(
+        'MedicalHistory', backref='patient', lazy='dynamic', cascade='all, delete-orphan'
+    )
 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -101,3 +105,29 @@ class BiomarkerReading(db.Model):
 
     def __repr__(self):
         return f'<BiomarkerReading {self.biomarker_type}: {self.value}>'
+
+
+class MedicalHistory(db.Model):
+    __tablename__ = 'medical_history'
+
+    id = db.Column(db.Integer, primary_key=True)
+    patient_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    condition = db.Column(db.String(200), nullable=False)
+    diagnosis_date = db.Column(db.String(100))  # e.g. "2023-01-15" or "Childhood"
+    status = db.Column(db.String(50), default='Active')  # Active, Resolved, Managed
+    notes = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'patient_id': self.patient_id,
+            'condition': self.condition,
+            'diagnosis_date': self.diagnosis_date,
+            'status': self.status,
+            'notes': self.notes,
+            'created_at': self.created_at.isoformat()
+        }
+
+    def __repr__(self):
+        return f'<MedicalHistory {self.condition}>'

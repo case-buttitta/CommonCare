@@ -1,5 +1,5 @@
 from app import create_app, db
-from app.models import User, Appointment, BiomarkerReading
+from app.models import User, Appointment, BiomarkerReading, MedicalHistory
 from datetime import datetime, timedelta
 
 app = create_app()
@@ -32,6 +32,32 @@ def seed_data():
     )
     doctor.set_password('password123')
     db.session.add(doctor)
+
+    # Create Medical History for patient
+    conditions = [
+        {
+            'condition': 'Hypertension',
+            'diagnosis_date': '2023-01-15',
+            'status': 'Managed',
+            'notes': 'Monitor blood pressure regularly.'
+        },
+        {
+            'condition': 'Seasonal Allergies',
+            'diagnosis_date': 'Childhood',
+            'status': 'Active',
+            'notes': 'Prescribed frequent antihistamines.'
+        }
+    ]
+
+    for c in conditions:
+        history = MedicalHistory(
+            patient_id=patient.id,
+            condition=c['condition'],
+            diagnosis_date=c['diagnosis_date'],
+            status=c['status'],
+            notes=c['notes']
+        )
+        db.session.add(history)
 
     db.session.flush()  # Get IDs assigned
 

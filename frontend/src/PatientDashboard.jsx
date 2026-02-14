@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import MedicalHistory from './components/MedicalHistory';
+import BiomarkerChart from './components/BiomarkerChart';
 
 export default function PatientDashboard() {
     const { user, token, logout, deleteAccount } = useAuth();
@@ -138,35 +140,54 @@ export default function PatientDashboard() {
                         {/* ── OVERVIEW TAB ── */}
                         {activeTab === 'overview' && (
                             <div className="tab-panel">
+                                <MedicalHistory patientId={user.id} userType="patient" />
+
                                 <h3 className="section-title">Your Biomarkers</h3>
                                 {biomarkers && Object.keys(biomarkers.latest).length > 0 ? (
-                                    <div className="biomarker-grid">
-                                        {Object.entries(biomarkers.latest).map(([type, data]) => {
-                                            const prev = biomarkers.previous?.[type];
-                                            const trend = prev ? data.value - prev.value : null;
-                                            return (
-                                                <div
-                                                    key={type}
-                                                    className="biomarker-card"
-                                                    onClick={() => setHistoryModal(type)}
-                                                >
-                                                    <div className="biomarker-card-header">
-                                                        <span className="biomarker-label">{formatBiomarkerName(type)}</span>
-                                                        <span className="biomarker-inspect">View History →</span>
-                                                    </div>
-                                                    <div className="biomarker-value">
-                                                        {data.value} <span className="biomarker-unit">{data.unit}</span>
-                                                    </div>
-                                                    {trend !== null && (
-                                                        <div className={`biomarker-trend ${trend < 0 ? 'improving' : trend > 0 ? 'worsening' : 'stable'}`}>
-                                                            {trend < 0 ? '↓' : trend > 0 ? '↑' : '→'} {Math.abs(trend).toFixed(1)} from previous
+                                    <>
+                                        <div className="biomarker-grid">
+                                            {Object.entries(biomarkers.latest).map(([type, data]) => {
+                                                const prev = biomarkers.previous?.[type];
+                                                const trend = prev ? data.value - prev.value : null;
+                                                return (
+                                                    <div
+                                                        key={type}
+                                                        className="biomarker-card"
+                                                        onClick={() => setHistoryModal(type)}
+                                                    >
+                                                        <div className="biomarker-card-header">
+                                                            <span className="biomarker-label">{formatBiomarkerName(type)}</span>
+                                                            <span className="biomarker-inspect">View Details →</span>
                                                         </div>
-                                                    )}
-                                                    <div className="biomarker-date">Last checked: {new Date(data.date).toLocaleDateString()}</div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
+                                                        <div className="biomarker-value">
+                                                            {data.value} <span className="biomarker-unit">{data.unit}</span>
+                                                        </div>
+                                                        {trend !== null && (
+                                                            <div className={`biomarker-trend ${trend < 0 ? 'improving' : trend > 0 ? 'worsening' : 'stable'}`}>
+                                                                {trend < 0 ? '↓' : trend > 0 ? '↑' : '→'} {Math.abs(trend).toFixed(1)} from previous
+                                                            </div>
+                                                        )}
+                                                        <div className="biomarker-date">Last checked: {new Date(data.date).toLocaleDateString()}</div>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+
+                                        {/* Charts Section */}
+                                        <div className="mt-8">
+                                            <h3 className="section-title">Health Trends</h3>
+                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                                {Object.entries(biomarkers.history).map(([type, history]) => (
+                                                    <BiomarkerChart
+                                                        key={type}
+                                                        data={history}
+                                                        type={type}
+                                                        unit={history[0]?.unit || ''}
+                                                    />
+                                                ))}
+                                            </div>
+                                        </div>
+                                    </>
                                 ) : (
                                     <div className="empty-state">
                                         <p>No biomarker data yet. Complete an appointment to see your health readings.</p>
@@ -329,6 +350,14 @@ export default function PatientDashboard() {
                             <h3>{formatBiomarkerName(historyModal)} History</h3>
                             <button className="modal-close" onClick={() => setHistoryModal(null)}>✕</button>
                         </div>
+
+                        <div className="mb-6">
+                            <BiomarkerChart
+                                data={biomarkers.history[historyModal]}
+                                type={historyModal}
+                                unit={biomarkers.history[historyModal][0]?.unit || ''}
+                            />
+                        </div>
                         <table className="history-table">
                             <thead>
                                 <tr>
@@ -347,6 +376,7 @@ export default function PatientDashboard() {
                                 ))}
                             </tbody>
                         </table>
+
                     </div>
                 </div>
             )}
