@@ -17,10 +17,18 @@ class User(db.Model):
 
     # Relationships
     patient_appointments = db.relationship(
-        'Appointment', foreign_keys='Appointment.patient_id', backref='patient', lazy='dynamic'
+        'Appointment',
+        back_populates='patient',
+        foreign_keys='Appointment.patient_id',
+        cascade='all, delete-orphan',
+        lazy='dynamic'
     )
     doctor_appointments = db.relationship(
-        'Appointment', foreign_keys='Appointment.doctor_id', backref='doctor', lazy='dynamic'
+        'Appointment',
+        back_populates='doctor',
+        foreign_keys='Appointment.doctor_id',
+        cascade='all, delete-orphan',
+        lazy='dynamic'
     )
     
     medical_history = db.relationship(
@@ -63,6 +71,17 @@ class Appointment(db.Model):
     # Relationship to biomarker readings
     biomarker_readings = db.relationship('BiomarkerReading', backref='appointment', lazy='dynamic',
                                          cascade='all, delete-orphan')
+    patient = db.relationship(
+        "User",
+        back_populates="patient_appointments",
+        foreign_keys=[patient_id]
+    )
+
+    doctor = db.relationship(
+        "User",
+        back_populates="doctor_appointments",
+        foreign_keys=[doctor_id]
+    )
 
     def to_dict(self):
         return {
@@ -117,6 +136,8 @@ class MedicalHistory(db.Model):
     status = db.Column(db.String(50), default='Active')  # Active, Resolved, Managed
     notes = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    patient = db.relationship("User", back_populates="medical_history")
 
     def to_dict(self):
         return {

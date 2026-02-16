@@ -33,11 +33,19 @@ services:
     ports:
       - "5001:5000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     volumes:
       - ./backend:/app
       - ./db:/db
     restart: on-failure
+    command: >
+      sh -c "
+        echo 'Waiting for DB to be ready...';
+        until pg_isready -h db -p 5432 -U postgres; do sleep 2; done;
+        echo 'DB ready! Starting backend...';
+        python run.py
+      "
 
   frontend:
     profiles: ["dev"]
