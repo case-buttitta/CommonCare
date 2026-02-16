@@ -101,8 +101,8 @@ def seed_data():
             reason=appt_data["reason"],
             notes=appt_data["notes"]
         )
-        patient.appointments_as_patient.append(appt)
-        doctor.appointments_as_doctor.append(appt)
+        patient.patient_appointments.append(appt)
+        doctor.doctor_appointments.append(appt)
 
         db.session.flush()  # ensures appt.id exists for child biomarker readings
 

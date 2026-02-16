@@ -32,7 +32,7 @@ class User(db.Model):
     )
     
     medical_history = db.relationship(
-        'MedicalHistory', backref='patient', lazy='dynamic', cascade='all, delete-orphan'
+        'MedicalHistory', back_populates='patient', lazy='dynamic', cascade='all, delete-orphan'
     )
 
     def set_password(self, password):
