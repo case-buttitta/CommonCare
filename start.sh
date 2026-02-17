@@ -5,6 +5,12 @@ echo "Starting CommonCare..."
 # Stop any existing containers
 docker compose down 2>/dev/null
 
+# Remove old volumes (optional, be cautious)
+docker volume rm commoncare_db_data 2>/dev/null
+
+# alternative:
+#docker volume prune --all --force
+
 # Build and start containers
 docker compose up --build -d
 
