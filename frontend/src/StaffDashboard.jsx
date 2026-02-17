@@ -25,6 +25,7 @@ export default function StaffDashboard() {
 
     const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
+
     useEffect(() => {
         fetchInitialData();
     }, []);
@@ -139,7 +140,7 @@ export default function StaffDashboard() {
 
             <main className="dashboard-main">
                 <div className="welcome-card">
-                    <h2>Welcome, {user?.full_name?.split(' ')[0]}!</h2>
+                    <h2>Welcome, {user?.full_name?.split(' ')[0]} {user?.full_name?.split(' ')[2]}!</h2>
                     <p>Manage patients and appointments.</p>
                 </div>
 
