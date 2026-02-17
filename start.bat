@@ -4,11 +4,11 @@ echo Starting CommonCare...
 REM Stop any existing containers
 docker compose down 2>nul
 
-REM Build and start containers
-docker compose up --build -d
-
 REM Remove old volumes (optional, be cautious)
 docker volume rm commoncare_db_data 2>nul
+
+REM Build and start containers
+docker compose --profile prod up --build -d
 
 REM Wait for services to be ready
 echo Waiting for services to start...

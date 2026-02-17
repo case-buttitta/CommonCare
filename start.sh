@@ -12,7 +12,7 @@ docker volume rm commoncare_db_data 2>/dev/null
 #docker volume prune --all --force
 
 # Build and start containers
-docker compose up --build -d
+docker compose --profile prod up --build -d
 
 # Wait for services to be ready
 echo "Waiting for services to start..."
