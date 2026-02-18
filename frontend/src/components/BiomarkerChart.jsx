@@ -1,19 +1,26 @@
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import './BiomarkerChart.css';
 
 const BiomarkerChart = ({ data, type, unit }) => {
     if (!data || data.length === 0) {
-        return <div className="p-4 text-gray-500 italic">No trend data available.</div>;
+        return (
+            <div className="chart-empty">
+                No trend data available.
+            </div>
+        );
     }
 
-    // Sort data by date just in case
-    const sortedData = [...data].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const sortedData = [...data].sort(
+        (a, b) => new Date(a.date) - new Date(b.date)
+    );
 
     return (
-        <div className="bg-white p-4 rounded-lg shadow-sm mb-6">
-            <h3 className="text-lg font-medium text-gray-700 mb-4 capitalize">
+        <div className="biomarker-chart">
+            <h3 className="chart-title">
                 {type.replace(/_/g, ' ')} Trend
             </h3>
-            <div className="h-64 w-full">
+
+            <div className="chart-container">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart
                         data={sortedData}
@@ -22,11 +29,21 @@ const BiomarkerChart = ({ data, type, unit }) => {
                         <CartesianGrid strokeDasharray="3 3" />
                         <XAxis
                             dataKey="date"
-                            tickFormatter={(date) => new Date(date).toLocaleDateString()}
+                            tickFormatter={(date) =>
+                                new Date(date).toLocaleDateString()
+                            }
                         />
-                        <YAxis label={{ value: unit, angle: -90, position: 'insideLeft' }} />
+                        <YAxis
+                            label={{
+                                value: unit,
+                                angle: -90,
+                                position: 'insideLeft'
+                            }}
+                        />
                         <Tooltip
-                            labelFormatter={(date) => new Date(date).toLocaleDateString()}
+                            labelFormatter={(date) =>
+                                new Date(date).toLocaleDateString()
+                            }
                             formatter={(value) => [`${value} ${unit}`, 'Value']}
                         />
                         <Legend />

@@ -1,0 +1,26 @@
+.biomarker-chart {
+    background: white;
+    padding: 16px;
+    border-radius: 8px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    margin-bottom: 24px;
+}
+
+.chart-title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #444;
+    margin-bottom: 16px;
+    text-transform: capitalize;
+}
+
+.chart-container {
+    height: 256px; /* equivalent to h-64 */
+    width: 100%;
+}
+
+.chart-empty {
+    padding: 16px;
+    color: #777;
+    font-style: italic;
+}
