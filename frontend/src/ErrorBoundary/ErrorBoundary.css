@@ -1,0 +1,35 @@
+.error-boundary {
+    min-height: 60vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 40px;
+}
+
+.error-boundary h2 {
+    margin-bottom: 12px;
+    font-size: 22px;
+}
+
+.error-boundary p {
+    margin-bottom: 20px;
+    color: #555;
+}
+
+.btn {
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-primary {
+    background: #DE6464;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #780606;
+}

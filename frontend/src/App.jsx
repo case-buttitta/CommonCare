@@ -4,6 +4,7 @@ import Login from './Login'
 import Signup from './Signup'
 import PatientDashboard from './PatientDashboard'
 import StaffDashboard from './StaffDashboard'
+import ErrorBoundary from "./ErrorBoundary/ErrorBoundary";
 import './App.css'
 
 function AppContent() {
@@ -36,7 +37,9 @@ function AppContent() {
 function App() {
   return (
     <AuthProvider>
-      <AppContent />
+      <ErrorBoundary>
+        <AppContent />
+      </ErrorBoundary>
     </AuthProvider>
   );
 }

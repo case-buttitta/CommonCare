@@ -166,6 +166,7 @@ export default function StaffDashboard() {
                                 <div className="staff-layout">
                                     <div className="patient-list-panel">
                                         <h3 className="section-title">Patients ({patients.length})</h3>
+                                        <h4 className="section-label">Select a patient to view dashboard</h4>
                                         <div className="patient-list">
                                             {patients.map(p => (
                                                 <div
@@ -188,8 +189,8 @@ export default function StaffDashboard() {
                                             <>
                                                 <h3 className="section-title">{selectedPatient.full_name}</h3>
                                                 <div className="patient-meta">
-                                                    <span>{selectedPatient.email}</span>
-                                                    <span>{selectedPatient.location}</span>
+                                                    <span className="patient-info-detail">{selectedPatient.email}</span>
+                                                    <span className="patient-info-detail">{selectedPatient.location}</span>
                                                 </div>
 
                                                 {/* Medical History */}
