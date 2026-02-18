@@ -1,24 +1,4 @@
 services:
-  db:
-    profiles: ["dev", "prod"]
-    image: postgres:15-alpine
-    container_name: commoncare-db
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: commoncare
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./db:/db
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   backend:
     profiles: ["dev", "prod"]
     build:
@@ -26,24 +6,19 @@ services:
       dockerfile: Dockerfile
     container_name: commoncare-backend
     environment:
-      DATABASE_URL: postgresql+psycopg://postgres:postgres@db:5432/commoncare
+      DATABASE_URL: ${DATABASE_URL}
       SECRET_KEY: docker-secret-key
       FLASK_ENV: development
       DB_EXPORT_PATH: /db/init.sql
     ports:
       - "5001:5000"
-    depends_on:
-      db:
-        condition: service_healthy
     volumes:
       - ./backend:/app
       - ./db:/db
     restart: on-failure
     command: >
       sh -c "
-        echo 'Waiting for DB to be ready...';
-        until pg_isready -h db -p 5432 -U postgres; do sleep 2; done;
-        echo 'DB ready! Starting backend...';
+        echo 'Starting backend...';
         python run.py
       "
 
@@ -69,6 +44,3 @@ services:
       - "8080:80"
     depends_on:
       - backend
-
-volumes:
-  postgres_data:
