@@ -702,6 +702,30 @@ body {
   margin-top: 0.5rem;
 }
 
+.charts-section {
+    margin-top: 32px; /* equivalent to mt-8 */
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.charts-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 24px; /* equivalent to gap-6 */
+}
+
+/* Responsive behavior (equivalent to lg:grid-cols-2) */
+@media (min-width: 1024px) {
+    .charts-grid {
+        grid-template-columns: 1fr 1fr;
+    }
+}
+
+
 /* Appointment List */
 .appointment-list {
   display: flex;
