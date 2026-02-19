@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import MedicalHistory from './components/MedicalHistory';
+import BiomarkerChart from './components/BiomarkerChart';
+
 
 export default function StaffDashboard() {
     const { user, token, logout, deleteAccount } = useAuth();
@@ -13,6 +15,7 @@ export default function StaffDashboard() {
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [patientBiomarkers, setPatientBiomarkers] = useState(null);
     const [patientAppointments, setPatientAppointments] = useState([]);
+    const [historyModal, setHistoryModal] = useState(null);
     const [allAppointments, setAllAppointments] = useState([]);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -206,7 +209,7 @@ export default function StaffDashboard() {
                                                             const prev = patientBiomarkers.previous?.[type];
                                                             const trend = prev ? data.value - prev.value : null;
                                                             return (
-                                                                <div key={type} className="biomarker-card">
+                                                                <div key={type} className="biomarker-card" onClick={() => setHistoryModal(type)}>
                                                                     <div className="biomarker-card-header">
                                                                         <span className="biomarker-label">{formatBiomarkerName(type)}</span>
                                                                     </div>
@@ -225,6 +228,24 @@ export default function StaffDashboard() {
                                                 ) : (
                                                     <div className="empty-state"><p>No biomarker data available.</p></div>
                                                 )}
+
+                                                {/* Charts */}
+                                                {patientBiomarkers?.history && (
+                                                    <div className="charts-section">
+                                                        <h4 className="subsection-title" style={{ marginTop: '1.5rem' }}>Health Trends</h4>
+                                                        <div className="charts-grid">
+                                                            {Object.entries(patientBiomarkers.history).map(([type, history]) => (
+                                                                <BiomarkerChart
+                                                                key={type}
+                                                                data={history}
+                                                                type={type}
+                                                                unit={history[0]?.unit || ''}
+                                                                />
+                                                                ))}
+                                                                </div>
+                                                                </div>
+                                                            )}
+
 
                                                 {/* Patient Appointment History */}
                                                 <h4 className="subsection-title" style={{ marginTop: '1.5rem' }}>Appointment History</h4>
@@ -435,6 +456,51 @@ export default function StaffDashboard() {
                     </div>
                 </div>
             )}
+            {/* ── BIOMARKER HISTORY MODAL ── */}
+{historyModal && patientBiomarkers?.history?.[historyModal] && (
+    <div className="modal-overlay" onClick={() => setHistoryModal(null)}>
+        <div className="modal history-modal" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+                <h3>{formatBiomarkerName(historyModal)} History</h3>
+                <button className="modal-close" onClick={() => setHistoryModal(null)}>✕</button>
+            </div>
+
+            {/* Chart */}
+            <div className="mb-6">
+                <BiomarkerChart
+                    data={patientBiomarkers.history[historyModal]}
+                    type={historyModal}
+                    unit={patientBiomarkers.history[historyModal][0]?.unit || ''}
+                />
+            </div>
+
+            {/* Table */}
+            <table className="history-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Value</th>
+                        <th>Doctor</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {patientBiomarkers.history[historyModal]
+                        .slice()
+                        .reverse()
+                        .map((entry, i) => (
+                            <tr key={i}>
+                                <td>{new Date(entry.date).toLocaleDateString()}</td>
+                                <td>
+                                    <strong>{entry.value}</strong> {entry.unit}
+                                </td>
+                                <td>{entry.doctor_name}</td>
+                            </tr>
+                        ))}
+                </tbody>
+            </table>
         </div>
+    </div>
+)}
+</div>
     );
 }
