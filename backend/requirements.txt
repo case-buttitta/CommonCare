@@ -6,3 +6,5 @@ python-dotenv==1.0.0
 sqlalchemy>=2.0.30
 PyJWT>=2.8.0
 cryptography>=41.0.0
+flask-smorest>=0.40.0
+marshmallow>=3.0.0
