@@ -347,3 +347,74 @@ def delete_medical_history(current_user, record_id):
     db.session.commit()
     return jsonify({'message': 'Record deleted successfully'})
 
+# ── Normal Ranges ─────────────────────────────────────────────────────────────
+
+from app.models import NormalRange
+
+@main.route('/api/normal-ranges', methods=['GET'])
+@token_required
+def get_normal_ranges(current_user):
+    if current_user.user_type != 'staff':
+        return jsonify({'error': 'Staff access required'}), 403
+
+    ranges = NormalRange.query.order_by(NormalRange.biomarker_type.asc()).all()
+    return jsonify([r.to_dict() for r in ranges])
+
+
+@main.route('/api/normal-ranges', methods=['POST'])
+@token_required
+def create_normal_range(current_user):
+    if current_user.user_type != 'staff':
+        return jsonify({'error': 'Staff access required'}), 403
+
+    data = request.get_json()
+    required = ['biomarker_type', 'min_value', 'max_value', 'unit']
+
+    for field in required:
+        if field not in data:
+            return jsonify({'error': f'{field} is required'}), 400
+
+    new_range = NormalRange(
+        biomarker_type=data['biomarker_type'],
+        min_value=data['min_value'],
+        max_value=data['max_value'],
+        unit=data['unit']
+    )
+
+    db.session.add(new_range)
+    db.session.commit()
+    return jsonify(new_range.to_dict()), 201
+
+
+@main.route('/api/normal-ranges/<int:range_id>', methods=['PUT'])
+@token_required
+def update_normal_range(current_user, range_id):
+    if current_user.user_type != 'staff':
+        return jsonify({'error': 'Staff access required'}), 403
+
+    r = NormalRange.query.get_or_404(range_id)
+    data = request.get_json()
+
+    if 'biomarker_type' in data:
+        r.biomarker_type = data['biomarker_type']
+    if 'min_value' in data:
+        r.min_value = data['min_value']
+    if 'max_value' in data:
+        r.max_value = data['max_value']
+    if 'unit' in data:
+        r.unit = data['unit']
+
+    db.session.commit()
+    return jsonify(r.to_dict())
+
+
+@main.route('/api/normal-ranges/<int:range_id>', methods=['DELETE'])
+@token_required
+def delete_normal_range(current_user, range_id):
+    if current_user.user_type != 'staff':
+        return jsonify({'error': 'Staff access required'}), 403
+
+    r = NormalRange.query.get_or_404(range_id)
+    db.session.delete(r)
+    db.session.commit()
+    return jsonify({'message': 'Normal range deleted'})

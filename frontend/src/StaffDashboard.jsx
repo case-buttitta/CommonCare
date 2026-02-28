@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import MedicalHistory from './components/MedicalHistory';
 import BiomarkerChart from './components/BiomarkerChart';
+import NormalRanges from "./components/NormalRanges";
 
 
 export default function StaffDashboard() {
@@ -126,6 +127,7 @@ export default function StaffDashboard() {
         { id: 'patients', label: 'Patients' },
         { id: 'appointments', label: 'Appointments' },
         { id: 'account', label: 'Account' },
+        { id: 'normal_ranges', label: 'Normal Ranges' },
     ];
 
     return (
@@ -379,6 +381,13 @@ export default function StaffDashboard() {
                                 </div>
                             </div>
                         )}
+                        {/* ── NORMAL RANGES VIEW ── */}
+                        {activeView === 'normal_ranges' && (
+                            <div className="tab-panel">
+                                <NormalRanges />
+                            </div>
+                        )}
+
                     </section>
                 )}
             </main>
