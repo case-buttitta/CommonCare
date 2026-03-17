@@ -89,6 +89,13 @@ The two required variables are:
 
 > The repo's `.env` is pre-configured to use the shared Aiven Cloud database. You can leave it as-is or point `DATABASE_URL` at a local Postgres instance.
 
+Set cloud secrets to use the cloud db
+```bash
+python manage_secrets.py decrypt
+```
+
+password despite best practices, so we dont lose more points, is "2kiwis"
+
 ### 2. Local database (skip if using Aiven)
 
 If you want a fully local setup, create a Postgres database:
