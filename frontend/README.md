@@ -1,16 +1,64 @@
-# React + Vite
+# CommonCare — Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React + Vite frontend for the CommonCare healthcare management app.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React 19** with hooks and Context API
+- **Vite 7** — dev server with hot module replacement
+- **Recharts** — biomarker trend charts
+- **ESLint** — code quality
 
-## React Compiler
+## Structure
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```
+src/
+├── App.jsx                  # Root component & routing logic
+├── AuthContext.jsx           # JWT auth state (Context API)
+├── Login.jsx                # Login page
+├── Signup.jsx               # Registration page
+├── PatientDashboard.jsx     # Patient view (appointments, biomarkers, history)
+├── StaffDashboard.jsx       # Staff view (patients, appointments)
+└── components/
+    ├── BiomarkerChart.jsx   # Line chart for health metric history
+    ├── MedicalHistory.jsx   # Add / edit / delete medical conditions
+    └── ConfirmationModal.jsx
+```
 
-## Expanding the ESLint configuration
+## Running Locally
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+From the `frontend/` directory:
+
+```bash
+npm install
+npm run dev       # http://localhost:5173
+```
+
+Or from the repo root:
+
+```bash
+npm install --prefix frontend
+npm run dev --prefix frontend
+```
+
+The frontend expects the Flask backend running at **http://localhost:5000**. See the root [README](../README.md) for full setup instructions.
+
+## Available Scripts
+
+| Script | Description |
+|--------|-------------|
+| `npm run dev` | Start Vite dev server with HMR |
+| `npm run build` | Production build to `dist/` |
+| `npm run preview` | Preview production build locally |
+| `npm run lint` | Run ESLint |
+
+## Authentication
+
+- JWT token stored in `localStorage`
+- `AuthContext` provides `user`, `login`, and `logout` to the component tree
+- On page load, the app checks `localStorage` for an existing token and restores the session automatically
+- Route rendering is determined by `user.user_type` (`patient` or `staff`)
+
+## Environment
+
+The Vite dev server proxies `/api` requests to the backend. This is configured in [vite.config.js](vite.config.js).
