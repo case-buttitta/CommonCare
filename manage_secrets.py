@@ -13,7 +13,6 @@ ENV_FILE = '.env'
 # but for this simple use case we'll use a fixed salt or generate one and prepend it.
 # Let's use a fixed salt for simplicity as requested "password is this possible".
 # A fixed salt means rainbow table attacks are possible if the password is weak, 
-# but "2kiwis" is already known.
 SALT = b'commoncare_salt_' 
 
 def derive_key(password):

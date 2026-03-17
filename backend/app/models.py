@@ -152,3 +152,21 @@ class MedicalHistory(db.Model):
 
     def __repr__(self):
         return f'<MedicalHistory {self.condition}>'
+
+class NormalRange(db.Model):
+    __tablename__ = 'normal_ranges'
+
+    id = db.Column(db.Integer, primary_key=True)
+    biomarker_type = db.Column(db.String(100), nullable=False)
+    min_value = db.Column(db.Float, nullable=False)
+    max_value = db.Column(db.Float, nullable=False)
+    unit = db.Column(db.String(20), nullable=False)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'biomarker_type': self.biomarker_type,
+            'min_value': self.min_value,
+            'max_value': self.max_value,
+            'unit': self.unit
+        }

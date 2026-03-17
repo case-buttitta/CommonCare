@@ -1,0 +1,16 @@
+from marshmallow import Schema, fields, validate
+
+class MedicalHistorySchema(Schema):
+    id = fields.Int(dump_only=True)
+    patient_id = fields.Int(required=True)
+    condition = fields.Str(required=True, validate=validate.Length(min=1, max=200))
+    diagnosis_date = fields.Str(validate=validate.Length(max=100), allow_none=True)
+    status = fields.Str(validate=validate.Length(max=50), load_default="Active", allow_none=True)
+    notes = fields.Str(allow_none=True)
+    created_at = fields.DateTime(dump_only=True)
+
+class MedicalHistoryUpdateSchema(Schema):
+    condition = fields.Str(validate=validate.Length(min=1, max=200))
+    diagnosis_date = fields.Str(validate=validate.Length(max=100), allow_none=True)
+    status = fields.Str(validate=validate.Length(max=50), allow_none=True)
+    notes = fields.Str(allow_none=True)
