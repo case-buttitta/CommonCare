@@ -18,6 +18,9 @@ def create_app(config_class=Config):
 
     from app.routes import main
     app.register_blueprint(main)
+
+    from app.messaging_routes import messaging
+    app.register_blueprint(messaging)
     
     from app.api_history import blp as history_blp
     api.register_blueprint(history_blp)

@@ -1,5 +1,6 @@
 from app import create_app, db
-from app.models import User, Appointment, BiomarkerReading, MedicalHistory
+from app.models import (User, Appointment, BiomarkerReading, MedicalHistory,
+                        Conversation, Message, MessageReaction, MessageRequest)
 from datetime import datetime, timedelta
 
 app = create_app()

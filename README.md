@@ -4,6 +4,10 @@ A healthcare management web application that connects patients with medical staf
 
 **Stack:** React + Vite · Flask · PostgreSQL (Aiven Cloud)
 
+**Live Preview:** [https://case-buttitta.github.io/CommonCare/](https://case-buttitta.github.io/CommonCare/)
+
+> The GitHub Pages deployment is a **frontend-only** static preview. API-dependent features (login, data) require running the backend locally — see Quick Start below.
+
 ---
 
 ## Features
@@ -189,6 +193,9 @@ ITSC4155_Project/
 │   └── vite.config.js
 ├── db/
 │   └── init.sql              # Schema + seed data
+├── .github/
+│   └── workflows/
+│       └── deploy.yml        # GitHub Pages auto-deploy
 ├── docker-compose.yml
 ├── .env.example
 ├── start.sh                  # Linux/macOS Docker launcher
@@ -216,6 +223,21 @@ ITSC4155_Project/
 | POST | `/api/patients/<id>/history` | Add history record | Staff only |
 | PUT | `/api/history/<id>` | Update history record | Staff only |
 | DELETE | `/api/history/<id>` | Delete history record | Staff only |
+
+---
+
+## GitHub Pages Deployment
+
+The frontend auto-deploys to GitHub Pages on every push to `main` via the workflow in `.github/workflows/deploy.yml`.
+
+### One-time setup (repo owner)
+
+1. Go to the repo on GitHub → **Settings** → **Pages**
+2. Under **Source**, select **GitHub Actions**
+3. Push to `main` — the workflow will build and deploy automatically
+4. The site will be live at `https://case-buttitta.github.io/CommonCare/`
+
+That's it — no other configuration needed. Future pushes to `main` will redeploy automatically.
 
 ---
 

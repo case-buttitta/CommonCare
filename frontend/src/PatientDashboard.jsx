@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import MedicalHistory from "./components/MedicalHistory";
 import BiomarkerChart from "./components/BiomarkerChart";
+import MessagingWidget from "./components/MessagingWidget";
 
 export default function PatientDashboard() {
   const { user, token, logout, deleteAccount } = useAuth();
@@ -503,6 +504,7 @@ export default function PatientDashboard() {
           </div>
         </div>
       )}
+      <MessagingWidget />
     </div>
   );
 }
