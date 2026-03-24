@@ -198,6 +198,8 @@ def update_appointment(current_user, appointment_id):
         appointment.status = data['status']
     if 'notes' in data:
         appointment.notes = data['notes']
+    if 'treatments' in data:
+        appointment.treatments = data['treatments']
 
     # Handle biomarker readings
     if 'biomarker_readings' in data:

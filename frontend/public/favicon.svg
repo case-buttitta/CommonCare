@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- Folder tab -->
+  <rect x="5" y="3" width="11" height="7" rx="2" fill="#7B1728"/>
+  <!-- Folder body -->
+  <rect x="5" y="8" width="22" height="21" rx="2" fill="#7B1728"/>
+  <!-- Inner card -->
+  <rect x="7" y="11" width="18" height="15" rx="1" fill="#9e2235"/>
+  <!-- ECG / pulse line -->
+  <polyline
+    points="8,19 11,19 13,14 15,24 17,17 19,19 25,19"
+    stroke="white" stroke-width="1.8" fill="none"
+    stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

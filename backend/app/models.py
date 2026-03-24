@@ -66,6 +66,7 @@ class Appointment(db.Model):
     status = db.Column(db.String(20), nullable=False, default='pending')  # pending, completed, cancelled
     reason = db.Column(db.String(500))
     notes = db.Column(db.Text)
+    treatments = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationship to biomarker readings
@@ -94,6 +95,7 @@ class Appointment(db.Model):
             'status': self.status,
             'reason': self.reason,
             'notes': self.notes,
+            'treatments': self.treatments,
             'created_at': self.created_at.isoformat(),
             'biomarker_readings': [r.to_dict() for r in self.biomarker_readings]
         }

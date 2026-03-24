@@ -27,6 +27,7 @@ export default function StaffDashboard() {
     const [formSystolic, setFormSystolic] = useState('');
     const [formDiastolic, setFormDiastolic] = useState('');
     const [formNotes, setFormNotes] = useState('');
+    const [formTreatments, setFormTreatments] = useState('');
     const [formSubmitting, setFormSubmitting] = useState(false);
 
     const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
@@ -72,6 +73,7 @@ export default function StaffDashboard() {
         setFormSystolic('');
         setFormDiastolic('');
         setFormNotes(appt.notes || '');
+        setFormTreatments(appt.treatments || '');
     };
 
     const handleSubmitAppointment = async (e) => {
@@ -86,6 +88,7 @@ export default function StaffDashboard() {
                 body: JSON.stringify({
                     status: 'completed',
                     notes: formNotes,
+                    treatments: formTreatments,
                     biomarker_readings: [
                         { biomarker_type: 'blood_pressure_systolic', value: parseFloat(formSystolic), unit: 'mmHg' },
                         { biomarker_type: 'blood_pressure_diastolic', value: parseFloat(formDiastolic), unit: 'mmHg' },
@@ -442,6 +445,15 @@ export default function StaffDashboard() {
                                     placeholder="Appointment notes..."
                                     value={formNotes}
                                     onChange={e => setFormNotes(e.target.value)}
+                                />
+                            </div>
+                            <div className="form-group">
+                                <label>Recommended Treatments</label>
+                                <textarea
+                                    rows="3"
+                                    placeholder="e.g. Continue current medication, reduce sodium intake, follow-up in 30 days..."
+                                    value={formTreatments}
+                                    onChange={e => setFormTreatments(e.target.value)}
                                 />
                             </div>
                             <button type="submit" className="auth-button" disabled={formSubmitting}>

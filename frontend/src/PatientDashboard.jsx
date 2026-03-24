@@ -333,6 +333,11 @@ export default function PatientDashboard() {
                         {appt.notes && (
                           <div className="appointment-notes">{appt.notes}</div>
                         )}
+                        {appt.treatments && (
+                          <div className="appointment-treatments">
+                            <span className="treatments-label">Recommended Treatments:</span> {appt.treatments}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>

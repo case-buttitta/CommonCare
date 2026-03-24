@@ -838,6 +838,21 @@ body {
   border-radius: 8px;
 }
 
+.appointment-treatments {
+  margin-top: 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  padding: 0.5rem 0.75rem;
+  background: #fdf4f5;
+  border-left: 3px solid #7B1728;
+  border-radius: 0 8px 8px 0;
+}
+
+.treatments-label {
+  font-weight: 600;
+  color: #7B1728;
+}
+
 /* Booking Form */
 .booking-form {
   background: var(--white);
