@@ -43,6 +43,9 @@ jobs:
       - name: Copy index.html as 404.html for SPA routing
         run: cp frontend/dist/index.html frontend/dist/404.html
 
+      - name: Add .nojekyll to prevent Jekyll processing
+        run: touch frontend/dist/.nojekyll
+
       - name: Configure Pages
         uses: actions/configure-pages@v4
 
