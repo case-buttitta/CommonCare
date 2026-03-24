@@ -6,7 +6,7 @@ import BiomarkerChart from "./components/BiomarkerChart";
 import MessagingWidget from "./components/MessagingWidget";
 
 export default function PatientDashboard() {
-  const { user, token, logout, deleteAccount } = useAuth();
+  const { user, token, logout, deleteAccount, updateUser } = useAuth();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [activeTab, setActiveTab] = useState("overview");
@@ -25,6 +25,36 @@ export default function PatientDashboard() {
 
   // History modal
   const [historyModal, setHistoryModal] = useState(null); // biomarker_type string or null
+
+  // Profile editing
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileForm, setProfileForm] = useState({ full_name: '', address: '', location: '' });
+  const [profileSaving, setProfileSaving] = useState(false);
+
+  const startEditProfile = () => {
+    setProfileForm({ full_name: user?.full_name || '', address: user?.address || '', location: user?.location || '' });
+    setEditingProfile(true);
+  };
+
+  const handleSaveProfile = async (e) => {
+    e.preventDefault();
+    setProfileSaving(true);
+    try {
+      const res = await api('/api/auth/profile', { method: 'PUT', headers, body: JSON.stringify(profileForm) });
+      if (res.ok) {
+        updateUser(await res.json());
+        setEditingProfile(false);
+        showToast('Profile updated', 'success');
+      } else {
+        const data = await res.json();
+        showToast(data.error || 'Failed to update profile');
+      }
+    } catch {
+      showToast('Failed to update profile');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
 
   // Toast notification
   const [toast, setToast] = useState(null); // { message, type }
@@ -410,28 +440,57 @@ export default function PatientDashboard() {
               <div className="tab-panel">
                 <div className="account-section">
                   <h3>Account Settings</h3>
-                  <div className="account-info">
-                    <div className="info-row">
-                      <span className="info-label">Email</span>
-                      <span className="info-value">{user?.email}</span>
-                    </div>
-                    <div className="info-row">
-                      <span className="info-label">Location</span>
-                      <span className="info-value">{user?.location}</span>
-                    </div>
-                    <div className="info-row">
-                      <span className="info-label">Address</span>
-                      <span className="info-value">
-                        {user?.address || "Not provided"}
-                      </span>
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => setShowDeleteModal(true)}
-                    className="btn-danger"
-                  >
-                    Delete Account
-                  </button>
+                  {!editingProfile ? (
+                    <>
+                      <div className="account-info">
+                        <div className="info-row">
+                          <span className="info-label">Name</span>
+                          <span className="info-value">{user?.full_name}</span>
+                        </div>
+                        <div className="info-row">
+                          <span className="info-label">Email</span>
+                          <span className="info-value">{user?.email}</span>
+                        </div>
+                        <div className="info-row">
+                          <span className="info-label">Location</span>
+                          <span className="info-value">{user?.location}</span>
+                        </div>
+                        <div className="info-row">
+                          <span className="info-label">Address</span>
+                          <span className="info-value">{user?.address || "Not provided"}</span>
+                        </div>
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        <button className="btn-secondary" onClick={startEditProfile}>Edit Profile</button>
+                        <button onClick={() => setShowDeleteModal(true)} className="btn-danger">Delete Account</button>
+                      </div>
+                    </>
+                  ) : (
+                    <form onSubmit={handleSaveProfile}>
+                      <div className="form-group">
+                        <label>Name</label>
+                        <input type="text" value={profileForm.full_name} onChange={e => setProfileForm(p => ({ ...p, full_name: e.target.value }))} required />
+                      </div>
+                      <div className="form-group">
+                        <label>Email</label>
+                        <input type="email" value={user?.email} disabled />
+                      </div>
+                      <div className="form-group">
+                        <label>Location</label>
+                        <input type="text" value={profileForm.location} onChange={e => setProfileForm(p => ({ ...p, location: e.target.value }))} />
+                      </div>
+                      <div className="form-group">
+                        <label>Address</label>
+                        <input type="text" value={profileForm.address} onChange={e => setProfileForm(p => ({ ...p, address: e.target.value }))} />
+                      </div>
+                      <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                        <button type="submit" className="auth-button" style={{ width: 'auto', padding: '0.6rem 1.5rem' }} disabled={profileSaving}>
+                          {profileSaving ? 'Saving...' : 'Save Changes'}
+                        </button>
+                        <button type="button" className="btn-secondary" onClick={() => setEditingProfile(false)}>Cancel</button>
+                      </div>
+                    </form>
+                  )}
                 </div>
               </div>
             )}

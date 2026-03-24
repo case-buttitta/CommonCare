@@ -84,8 +84,10 @@ export function AuthProvider({ children }) {
     logout();
   };
 
+  const updateUser = (updatedUser) => setUser(updatedUser);
+
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, signup, logout, deleteAccount }}>
+    <AuthContext.Provider value={{ user, token, loading, login, signup, logout, deleteAccount, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

@@ -88,6 +88,22 @@ def delete_account(current_user):
     return jsonify({'message': 'Account deleted successfully'})
 
 
+@main.route('/api/auth/profile', methods=['PUT'])
+@token_required
+def update_profile(current_user):
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+    if 'full_name' in data and data['full_name'].strip():
+        current_user.full_name = data['full_name'].strip()
+    if 'address' in data:
+        current_user.address = data['address'].strip()
+    if 'location' in data and data['location'].strip():
+        current_user.location = data['location'].strip()
+    db.session.commit()
+    return jsonify(current_user.to_dict())
+
+
 # ── Staff Listing ────────────────────────────────────────────────────────────
 
 @main.route('/api/staff', methods=['GET'])

@@ -8,7 +8,7 @@ import MessagingWidget from './components/MessagingWidget';
 
 
 export default function StaffDashboard() {
-    const { user, token, logout, deleteAccount } = useAuth();
+    const { user, token, logout, deleteAccount, updateUser } = useAuth();
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [deleting, setDeleting] = useState(false);
     const [activeView, setActiveView] = useState('patients'); // patients | appointments | account
@@ -24,11 +24,49 @@ export default function StaffDashboard() {
     const [loading, setLoading] = useState(true);
 
     // Appointment form
-    const [formSystolic, setFormSystolic] = useState('');
-    const [formDiastolic, setFormDiastolic] = useState('');
+    const [formBiomarkers, setFormBiomarkers] = useState([]);
     const [formNotes, setFormNotes] = useState('');
     const [formTreatments, setFormTreatments] = useState('');
     const [formSubmitting, setFormSubmitting] = useState(false);
+
+    // Normal ranges (used to populate biomarker dropdown in modal)
+    const [normalRanges, setNormalRanges] = useState([]);
+
+    // Profile editing
+    const [editingProfile, setEditingProfile] = useState(false);
+    const [profileForm, setProfileForm] = useState({ full_name: '', address: '', location: '' });
+    const [profileSaving, setProfileSaving] = useState(false);
+    const [profileToast, setProfileToast] = useState(null);
+
+    const showProfileToast = (message, type = 'error') => {
+        setProfileToast({ message, type });
+        setTimeout(() => setProfileToast(null), 2000);
+    };
+
+    const startEditProfile = () => {
+        setProfileForm({ full_name: user?.full_name || '', address: user?.address || '', location: user?.location || '' });
+        setEditingProfile(true);
+    };
+
+    const handleSaveProfile = async (e) => {
+        e.preventDefault();
+        setProfileSaving(true);
+        try {
+            const res = await api('/api/auth/profile', { method: 'PUT', headers, body: JSON.stringify(profileForm) });
+            if (res.ok) {
+                updateUser(await res.json());
+                setEditingProfile(false);
+                showProfileToast('Profile updated', 'success');
+            } else {
+                const data = await res.json();
+                showProfileToast(data.error || 'Failed to update profile');
+            }
+        } catch {
+            showProfileToast('Failed to update profile');
+        } finally {
+            setProfileSaving(false);
+        }
+    };
 
     const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
@@ -40,12 +78,14 @@ export default function StaffDashboard() {
     const fetchInitialData = async () => {
         setLoading(true);
         try {
-            const [pRes, aRes] = await Promise.all([
+            const [pRes, aRes, nrRes] = await Promise.all([
                 api('/api/patients', { headers }),
                 api('/api/appointments', { headers }),
+                api('/api/normal-ranges', { headers }),
             ]);
             if (pRes.ok) setPatients(await pRes.json());
             if (aRes.ok) setAllAppointments(await aRes.json());
+            if (nrRes.ok) setNormalRanges(await nrRes.json());
         } catch (err) {
             console.error('Failed to fetch data:', err);
         } finally {
@@ -68,12 +108,29 @@ export default function StaffDashboard() {
         }
     };
 
+    const getUnit = (type) => normalRanges.find(r => r.biomarker_type === type)?.unit || '';
+
     const openAppointmentForm = (appt) => {
         setSelectedAppointment(appt);
-        setFormSystolic('');
-        setFormDiastolic('');
+        setFormBiomarkers([
+            { type: 'blood_pressure_systolic', value: '', unit: getUnit('blood_pressure_systolic') || 'mmHg' },
+            { type: 'blood_pressure_diastolic', value: '', unit: getUnit('blood_pressure_diastolic') || 'mmHg' },
+        ]);
         setFormNotes(appt.notes || '');
         setFormTreatments(appt.treatments || '');
+    };
+
+    const addBiomarker = () => setFormBiomarkers(prev => [...prev, { type: '', value: '', unit: '' }]);
+    const removeBiomarker = (i) => setFormBiomarkers(prev => prev.filter((_, idx) => idx !== i));
+    const updateBiomarker = (i, field, value) => {
+        setFormBiomarkers(prev => {
+            const updated = [...prev];
+            updated[i] = { ...updated[i], [field]: value };
+            if (field === 'type') {
+                updated[i].unit = normalRanges.find(r => r.biomarker_type === value)?.unit || '';
+            }
+            return updated;
+        });
     };
 
     const handleSubmitAppointment = async (e) => {
@@ -89,10 +146,9 @@ export default function StaffDashboard() {
                     status: 'completed',
                     notes: formNotes,
                     treatments: formTreatments,
-                    biomarker_readings: [
-                        { biomarker_type: 'blood_pressure_systolic', value: parseFloat(formSystolic), unit: 'mmHg' },
-                        { biomarker_type: 'blood_pressure_diastolic', value: parseFloat(formDiastolic), unit: 'mmHg' },
-                    ],
+                    biomarker_readings: formBiomarkers
+                        .filter(b => b.type && b.value !== '')
+                        .map(b => ({ biomarker_type: b.type, value: parseFloat(b.value), unit: b.unit })),
                 }),
             });
 
@@ -366,23 +422,57 @@ export default function StaffDashboard() {
                             <div className="tab-panel">
                                 <div className="account-section">
                                     <h3>Account Settings</h3>
-                                    <div className="account-info">
-                                        <div className="info-row">
-                                            <span className="info-label">Email</span>
-                                            <span className="info-value">{user?.email}</span>
-                                        </div>
-                                        <div className="info-row">
-                                            <span className="info-label">Location</span>
-                                            <span className="info-value">{user?.location}</span>
-                                        </div>
-                                        <div className="info-row">
-                                            <span className="info-label">Address</span>
-                                            <span className="info-value">{user?.address || 'Not provided'}</span>
-                                        </div>
-                                    </div>
-                                    <button onClick={() => setShowDeleteModal(true)} className="btn-danger">
-                                        Delete Account
-                                    </button>
+                                    {!editingProfile ? (
+                                        <>
+                                            <div className="account-info">
+                                                <div className="info-row">
+                                                    <span className="info-label">Name</span>
+                                                    <span className="info-value">{user?.full_name}</span>
+                                                </div>
+                                                <div className="info-row">
+                                                    <span className="info-label">Email</span>
+                                                    <span className="info-value">{user?.email}</span>
+                                                </div>
+                                                <div className="info-row">
+                                                    <span className="info-label">Location</span>
+                                                    <span className="info-value">{user?.location}</span>
+                                                </div>
+                                                <div className="info-row">
+                                                    <span className="info-label">Address</span>
+                                                    <span className="info-value">{user?.address || 'Not provided'}</span>
+                                                </div>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                                <button className="btn-secondary" onClick={startEditProfile}>Edit Profile</button>
+                                                <button onClick={() => setShowDeleteModal(true)} className="btn-danger">Delete Account</button>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <form onSubmit={handleSaveProfile}>
+                                            <div className="form-group">
+                                                <label>Name</label>
+                                                <input type="text" value={profileForm.full_name} onChange={e => setProfileForm(p => ({ ...p, full_name: e.target.value }))} required />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>Email</label>
+                                                <input type="email" value={user?.email} disabled />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>Location</label>
+                                                <input type="text" value={profileForm.location} onChange={e => setProfileForm(p => ({ ...p, location: e.target.value }))} />
+                                            </div>
+                                            <div className="form-group">
+                                                <label>Address</label>
+                                                <input type="text" value={profileForm.address} onChange={e => setProfileForm(p => ({ ...p, address: e.target.value }))} />
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                                <button type="submit" className="auth-button" style={{ width: 'auto', padding: '0.6rem 1.5rem' }} disabled={profileSaving}>
+                                                    {profileSaving ? 'Saving...' : 'Save Changes'}
+                                                </button>
+                                                <button type="button" className="btn-secondary" onClick={() => setEditingProfile(false)}>Cancel</button>
+                                            </div>
+                                        </form>
+                                    )}
                                 </div>
                             </div>
                         )}
@@ -411,33 +501,42 @@ export default function StaffDashboard() {
                             <span><strong>Reason:</strong> {selectedAppointment.reason}</span>
                         </div>
                         <form className="appointment-form" onSubmit={handleSubmitAppointment}>
-                            <h4>Blood Pressure Reading</h4>
-                            <div className="form-row">
-                                <div className="form-group">
-                                    <label>Systolic (mmHg)</label>
-                                    <input
-                                        type="number"
-                                        placeholder="e.g. 120"
-                                        value={formSystolic}
-                                        onChange={e => setFormSystolic(e.target.value)}
-                                        required
-                                        min="60"
-                                        max="250"
-                                    />
+                            <h4>Biomarker Readings</h4>
+                            {formBiomarkers.map((b, i) => (
+                                <div key={i} className="form-row" style={{ alignItems: 'flex-end' }}>
+                                    <div className="form-group" style={{ flex: 2 }}>
+                                        {i === 0 && <label>Biomarker</label>}
+                                        <select value={b.type} onChange={e => updateBiomarker(i, 'type', e.target.value)}>
+                                            <option value="">Select biomarker...</option>
+                                            {normalRanges.map(r => (
+                                                <option key={r.id} value={r.biomarker_type}>
+                                                    {formatBiomarkerName(r.biomarker_type)}{r.unit ? ` (${r.unit})` : ''}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div className="form-group" style={{ flex: 1 }}>
+                                        {i === 0 && <label>Value{b.unit ? ` (${b.unit})` : ''}</label>}
+                                        <input
+                                            type="number"
+                                            placeholder="Value"
+                                            value={b.value}
+                                            onChange={e => updateBiomarker(i, 'value', e.target.value)}
+                                            step="any"
+                                        />
+                                    </div>
+                                    <button
+                                        type="button"
+                                        className="btn-danger"
+                                        style={{ marginBottom: '0.75rem', padding: '0.45rem 0.7rem' }}
+                                        onClick={() => removeBiomarker(i)}
+                                        title="Remove"
+                                    >✕</button>
                                 </div>
-                                <div className="form-group">
-                                    <label>Diastolic (mmHg)</label>
-                                    <input
-                                        type="number"
-                                        placeholder="e.g. 80"
-                                        value={formDiastolic}
-                                        onChange={e => setFormDiastolic(e.target.value)}
-                                        required
-                                        min="40"
-                                        max="150"
-                                    />
-                                </div>
-                            </div>
+                            ))}
+                            <button type="button" className="btn-secondary" onClick={addBiomarker} style={{ marginBottom: '1rem' }}>
+                                + Add Biomarker
+                            </button>
                             <div className="form-group">
                                 <label>Notes</label>
                                 <textarea
@@ -525,6 +624,9 @@ export default function StaffDashboard() {
     </div>
 )}
 <MessagingWidget />
+{profileToast && (
+    <div className={`toast ${profileToast.type}`}>{profileToast.message}</div>
+)}
 </div>
     );
 }
