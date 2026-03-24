@@ -26,6 +26,13 @@ export default function PatientDashboard() {
   // History modal
   const [historyModal, setHistoryModal] = useState(null); // biomarker_type string or null
 
+  // Toast notification
+  const [toast, setToast] = useState(null); // { message, type }
+  const showToast = (message, type = "error") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 2000);
+  };
+
   const headers = {
     Authorization: `Bearer ${token}`,
     "Content-Type": "application/json",
@@ -74,10 +81,10 @@ export default function PatientDashboard() {
         setActiveTab("appointments");
       } else {
         const data = await res.json();
-        alert(data.error || "Failed to book appointment");
+        showToast(data.error || "Failed to book appointment");
       }
     } catch {
-      alert("Failed to book appointment");
+      showToast("Failed to book appointment");
     } finally {
       setBookingSubmitting(false);
     }
@@ -88,7 +95,7 @@ export default function PatientDashboard() {
     try {
       await deleteAccount();
     } catch (err) {
-      alert(err.message);
+      showToast(err.message);
       setDeleting(false);
     }
   };
@@ -511,6 +518,9 @@ export default function PatientDashboard() {
         </div>
       )}
       <MessagingWidget />
+      {toast && (
+        <div className={`toast ${toast.type}`}>{toast.message}</div>
+      )}
     </div>
   );
 }

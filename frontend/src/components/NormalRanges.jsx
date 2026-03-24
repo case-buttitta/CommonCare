@@ -18,7 +18,6 @@ const BIOMARKER_OPTIONS = [
   "bmi"
 ];
 
-// Units per biomarker type
 const BIOMARKER_UNITS = {
   blood_pressure_systolic: ["mmHg"],
   blood_pressure_diastolic: ["mmHg"],
@@ -36,28 +35,18 @@ const BIOMARKER_UNITS = {
   bmi: ["kg/m²"]
 };
 
-// Health Status Evaluator
 function evaluateHealthStatus(value, min, max) {
   if (value < min) {
-    if (value >= min * 0.95) return { status: "Slightly Low", color: "orange" };
-    return { status: "Low", color: "red" };
+    if (value >= min * 0.95) return { status: "Slightly Low", color: "#e67e00" };
+    return { status: "Low", color: "#c0392b" };
   }
-
   if (value > max) {
-    if (value <= max * 1.05) return { status: "Slightly High", color: "orange" };
-    return { status: "High", color: "red" };
+    if (value <= max * 1.05) return { status: "Slightly High", color: "#e67e00" };
+    return { status: "High", color: "#c0392b" };
   }
-
-  return { status: "Normal", color: "green" };
+  return { status: "Normal", color: "#27ae60" };
 }
 
-// Accent strip colors
-const ACCENT_COLORS = {
-  green: "#4CAF50",
-  orange: "#FF9800",
-  red: "#F44336",
-  default: "#BDBDBD"
-};
 
 export default function NormalRanges() {
   const [ranges, setRanges] = useState([]);
@@ -66,10 +55,7 @@ export default function NormalRanges() {
   const [searchTerm, setSearchTerm] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
-
-  // Test values per biomarker
   const [testValues, setTestValues] = useState({});
-
   const [form, setForm] = useState({
     biomarker_type: "",
     min_value: "",
@@ -79,7 +65,6 @@ export default function NormalRanges() {
 
   const token = localStorage.getItem("token");
 
-  // Fetch existing ranges
   useEffect(() => {
     api("/api/normal-ranges", {
       headers: { Authorization: `Bearer ${token}` }
@@ -89,21 +74,17 @@ export default function NormalRanges() {
       .catch(err => console.error("GET /normal-ranges failed:", err));
   }, [token]);
 
-  // Handle form changes, including auto-selecting unit
   const handleChange = (e) => {
     const { name, value } = e.target;
-
-    // If biomarker changes → update unit options
     if (name === "biomarker_type") {
       const units = BIOMARKER_UNITS[value] || [];
       setForm(prev => ({
         ...prev,
         biomarker_type: value,
-        unit: units.length === 1 ? units[0] : "" // auto-select if only one unit
+        unit: units.length === 1 ? units[0] : ""
       }));
       return;
     }
-
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
@@ -119,27 +100,20 @@ export default function NormalRanges() {
 
   const cancelEditing = () => {
     setEditingId(null);
-    setForm({
-      biomarker_type: "",
-      min_value: "",
-      max_value: "",
-      unit: ""
-    });
+    setForm({ biomarker_type: "", min_value: "", max_value: "", unit: "" });
   };
 
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this range?")) return;
-
     const res = await api(`/api/normal-ranges/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` }
     });
-
     if (res.ok) {
       setRanges(prev => prev.filter(r => r.id !== id));
     } else {
-      const error = await res.json().catch(() => ({ error: "Unknown error" }));
-      alert(error.error || "Failed to delete range");
+      const data = await res.json().catch(() => ({ error: "Unknown error" }));
+      setError(data.error || "Failed to delete range");
     }
   };
 
@@ -147,34 +121,13 @@ export default function NormalRanges() {
     e.preventDefault();
     setError("");
 
-    // Validation
-    if (!form.biomarker_type.trim()) {
-      setError("Biomarker type is required.");
-      return;
-    }
-
-    if (!form.min_value || !form.max_value) {
-      setError("Min and Max values are required.");
-      return;
-    }
-
+    if (!form.biomarker_type.trim()) return setError("Biomarker type is required.");
+    if (!form.min_value || !form.max_value) return setError("Min and Max values are required.");
     const minVal = parseFloat(form.min_value);
     const maxVal = parseFloat(form.max_value);
-
-    if (isNaN(minVal) || isNaN(maxVal)) {
-      setError("Min and Max must be valid numbers.");
-      return;
-    }
-
-    if (minVal >= maxVal) {
-      setError("Min must be LESS than Max.");
-      return;
-    }
-
-    if (!form.unit.trim()) {
-      setError("Unit is required.");
-      return;
-    }
+    if (isNaN(minVal) || isNaN(maxVal)) return setError("Min and Max must be valid numbers.");
+    if (minVal >= maxVal) return setError("Min must be less than Max.");
+    if (!form.unit.trim()) return setError("Unit is required.");
 
     const payload = {
       biomarker_type: form.biomarker_type.trim(),
@@ -183,354 +136,214 @@ export default function NormalRanges() {
       unit: form.unit.trim()
     };
 
-    // EDIT MODE
     if (editingId !== null) {
       const res = await api(`/api/normal-ranges/${editingId}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`
-        },
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
         body: JSON.stringify(payload)
       });
-
       if (res.ok) {
         const updated = await res.json();
         setRanges(prev => prev.map(r => (r.id === editingId ? updated : r)));
         cancelEditing();
       } else {
-        const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
-        setError(errorData.error || "Failed to update normal range");
+        const data = await res.json().catch(() => ({ error: "Unknown error" }));
+        setError(data.error || "Failed to update normal range");
       }
-
       return;
     }
 
-    // CREATE MODE
     const res = await api("/api/normal-ranges", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`
-      },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
       body: JSON.stringify(payload)
     });
-
     if (res.ok) {
       const newRange = await res.json();
       setRanges(prev => [...prev, newRange]);
-
-      setForm({
-        biomarker_type: "",
-        min_value: "",
-        max_value: "",
-        unit: ""
-      });
+      setForm({ biomarker_type: "", min_value: "", max_value: "", unit: "" });
     } else {
-      const errorData = await res.json().catch(() => ({ error: "Unknown error" }));
-      setError(errorData.error || "Failed to add normal range");
+      const data = await res.json().catch(() => ({ error: "Unknown error" }));
+      setError(data.error || "Failed to add normal range");
     }
   };
 
-  // Filtering + sorting
   const filtered = ranges
-    .filter(r =>
-      r.biomarker_type.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    .filter(r => r.biomarker_type.toLowerCase().includes(searchTerm.toLowerCase()))
     .sort((a, b) => a.biomarker_type.localeCompare(b.biomarker_type));
 
-  // Pagination
   const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(currentPage, totalPages);
-  const paginated = filtered.slice(
-    (safePage - 1) * pageSize,
-    safePage * pageSize
-  );
+  const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+
+  const formatName = (type) =>
+    type.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
 
   return (
-    <div style={{ padding: "20px" }}>
-      <h1>Normal Ranges (Staff Only)</h1>
+    <div className="tab-panel">
+      <h3 className="section-title">Normal Ranges</h3>
 
-      {error && (
-        <div
-          style={{
-            background: "#ffe6e6",
-            color: "#b30000",
-            padding: "10px",
-            borderRadius: "6px",
-            marginBottom: "15px",
-            border: "1px solid #ffcccc"
-          }}
-        >
-          {error}
-        </div>
-      )}
+      {error && <div className="form-error-banner">{error}</div>}
 
-      <form onSubmit={handleSubmit} style={{ marginBottom: "30px" }}>
-        {/* Biomarker dropdown */}
-        <select
-          name="biomarker_type"
-          value={form.biomarker_type}
-          onChange={handleChange}
-          style={{ padding: "6px", marginBottom: "10px", marginRight: "10px" }}
-        >
-          <option value="">Select Biomarker Type</option>
-          {BIOMARKER_OPTIONS.map(opt => (
-            <option key={opt} value={opt}>
-              {opt.replace(/_/g, " ")}
-            </option>
-          ))}
-        </select>
-
-        <input
-          name="min_value"
-          placeholder="Normal Min"
-          value={form.min_value}
-          onChange={handleChange}
-          style={{ marginRight: "10px" }}
-        />
-
-        <input
-          name="max_value"
-          placeholder="Normal Max"
-          value={form.max_value}
-          onChange={handleChange}
-          style={{ marginRight: "10px" }}
-        />
-
-        {/* Dynamic unit dropdown */}
-        <select
-          name="unit"
-          value={form.unit}
-          onChange={handleChange}
-          disabled={!form.biomarker_type}
-          style={{ padding: "6px", marginBottom: "10px", marginRight: "10px" }}
-        >
-          <option value="">Select Unit</option>
-
-          {form.biomarker_type &&
-            BIOMARKER_UNITS[form.biomarker_type]?.map(unit => (
-              <option key={unit} value={unit}>
-                {unit}
-              </option>
-            ))}
-        </select>
-
-        {/* Auto-calculated average (UI only) */}
-        <div style={{ marginTop: "10px", fontStyle: "italic" }}>
-          {form.min_value &&
-            form.max_value &&
-            !isNaN(parseFloat(form.min_value)) &&
-            !isNaN(parseFloat(form.max_value)) && (
-              <>
-                Calculated Average:{" "}
-                {(parseFloat(form.min_value) + parseFloat(form.max_value)) / 2}
-              </>
-            )}
-        </div>
-
-        {/* Live Min < Max warning */}
-        {form.min_value &&
-          form.max_value &&
-          parseFloat(form.min_value) >= parseFloat(form.max_value) && (
-            <div style={{ color: "red", marginTop: "5px" }}>
-              Min must be less than Max
+      {/* ── Add / Edit Form ── */}
+      <div className="normal-ranges-form-card">
+        <h4 className="subsection-title">{editingId ? "Edit Range" : "Add Normal Range"}</h4>
+        <form onSubmit={handleSubmit}>
+          <div className="form-row">
+            <div className="form-group" style={{ flex: 2 }}>
+              <label>Biomarker Type</label>
+              <select name="biomarker_type" value={form.biomarker_type} onChange={handleChange}>
+                <option value="">Select biomarker...</option>
+                {BIOMARKER_OPTIONS.map(opt => (
+                  <option key={opt} value={opt}>{formatName(opt)}</option>
+                ))}
+              </select>
             </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Unit</label>
+              <select name="unit" value={form.unit} onChange={handleChange} disabled={!form.biomarker_type}>
+                <option value="">Select unit...</option>
+                {form.biomarker_type && BIOMARKER_UNITS[form.biomarker_type]?.map(unit => (
+                  <option key={unit} value={unit}>{unit}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+          <div className="form-row">
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Normal Min</label>
+              <input
+                type="number"
+                name="min_value"
+                placeholder="e.g. 90"
+                value={form.min_value}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="form-group" style={{ flex: 1 }}>
+              <label>Normal Max</label>
+              <input
+                type="number"
+                name="max_value"
+                placeholder="e.g. 120"
+                value={form.max_value}
+                onChange={handleChange}
+              />
+            </div>
+            {form.min_value && form.max_value && !isNaN(parseFloat(form.min_value)) && !isNaN(parseFloat(form.max_value)) && (
+              <div className="form-group" style={{ flex: 1 }}>
+                <label>Calculated Average</label>
+                <input
+                  type="text"
+                  readOnly
+                  value={(parseFloat(form.min_value) + parseFloat(form.max_value)) / 2}
+                />
+              </div>
+            )}
+          </div>
+          {form.min_value && form.max_value && parseFloat(form.min_value) >= parseFloat(form.max_value) && (
+            <p className="form-inline-error">Min must be less than Max</p>
           )}
+          <div className="form-actions">
+            <button type="submit" className="auth-button" style={{ width: 'auto', padding: '0.6rem 1.5rem' }}>
+              {editingId ? "Save Changes" : "Add Range"}
+            </button>
+            {editingId && (
+              <button type="button" className="btn-secondary" onClick={cancelEditing}>
+                Cancel
+              </button>
+            )}
+          </div>
+        </form>
+      </div>
 
-        <button type="submit" style={{ marginTop: "10px" }}>
-          {editingId ? "Save Changes" : "Add Normal Range"}
-        </button>
+      {/* ── Search ── */}
+      <div className="form-group" style={{ maxWidth: '320px', marginBottom: '1rem' }}>
+        <input
+          type="text"
+          placeholder="Search biomarker..."
+          value={searchTerm}
+          onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+        />
+      </div>
 
-        {editingId && (
-          <button
-            type="button"
-            onClick={cancelEditing}
-            style={{
-              marginLeft: "10px",
-              background: "#999",
-              color: "white",
-              border: "none",
-              padding: "6px 10px",
-              borderRadius: "4px",
-              cursor: "pointer"
-            }}
-          >
-            Cancel
-          </button>
-        )}
-      </form>
+      {/* ── List ── */}
+      <h4 className="subsection-title">Existing Ranges ({filtered.length})</h4>
+      {paginated.length === 0 ? (
+        <div className="empty-state"><p>No normal ranges defined yet.</p></div>
+      ) : (
+        <div className="normal-ranges-list">
+          {paginated.map(r => {
+            const unit = r.unit ? ` ${r.unit}` : "";
+            const testValue = testValues[r.id];
+            let accentColor = "#d0d0d0";
+            let statusResult = null;
 
-      {/* Search bar */}
-      <input
-        type="text"
-        placeholder="Search biomarker..."
-        value={searchTerm}
-        onChange={(e) => {
-          setSearchTerm(e.target.value);
-          setCurrentPage(1);
-        }}
-        style={{
-          padding: "8px",
-          width: "250px",
-          marginBottom: "15px",
-          borderRadius: "6px",
-          border: "1px solid #ccc"
-        }}
-      />
+            if (testValue) {
+              statusResult = evaluateHealthStatus(parseFloat(testValue), r.min_value, r.max_value);
+              accentColor = statusResult.color;
+            }
 
-      <h2>Existing Ranges</h2>
-      <ul style={{ padding: 0 }}>
-        {paginated.map(r => {
-          const unit = r.unit ? ` ${r.unit}` : "";
-
-          // Determine accent strip color
-          const testValue = testValues[r.id];
-          let accentColor = ACCENT_COLORS.default;
-
-          if (testValue) {
-            const value = parseFloat(testValue);
-            const result = evaluateHealthStatus(value, r.min_value, r.max_value);
-            accentColor = ACCENT_COLORS[result.color] || ACCENT_COLORS.default;
-          }
-
-          const average =
-            r.min_value != null && r.max_value != null
+            const average = r.min_value != null && r.max_value != null
               ? (r.min_value + r.max_value) / 2
               : null;
 
-          return (
-            <li
-              key={r.id}
-              style={{
-                padding: "10px",
-                border: "1px solid #ddd",
-                borderRadius: "6px",
-                marginBottom: "8px",
-                background: "#ffffff",
-                listStyle: "none",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-                borderLeft: `6px solid ${accentColor}`
-              }}
-            >
-              <div>
-                <strong>{r.biomarker_type}</strong>
-                <div>
-                  Normal Range: {r.min_value}–{r.max_value}
-                  {unit}
-                </div>
-                {average !== null && (
-                  <div>
-                    Average: {average}
-                    {unit}
+            return (
+              <div key={r.id} className="normal-range-item" style={{ borderLeftColor: accentColor }}>
+                <div className="normal-range-info">
+                  <div className="normal-range-name">{formatName(r.biomarker_type)}</div>
+                  <div className="normal-range-values">
+                    <span className="reading-chip">{r.min_value}–{r.max_value}{unit}</span>
+                    {average !== null && (
+                      <span className="reading-chip">Avg: {average}{unit}</span>
+                    )}
                   </div>
-                )}
 
-                {/* Test patient value + health indicator */}
-                <div style={{ marginTop: "10px" }}>
-                  <input
-                    type="number"
-                    placeholder="Test patient value"
-                    value={testValues[r.id] || ""}
-                    onChange={(e) =>
-                      setTestValues(prev => ({ ...prev, [r.id]: e.target.value }))
-                    }
-                    style={{ width: "150px", marginRight: "10px" }}
-                  />
+                  {/* Test input */}
+                  <div className="normal-range-test">
+                    <div className="form-group" style={{ marginBottom: 0, flex: 1, maxWidth: '200px' }}>
+                      <input
+                        type="number"
+                        placeholder={`Test value (${r.unit})`}
+                        value={testValues[r.id] || ""}
+                        onChange={(e) => setTestValues(prev => ({ ...prev, [r.id]: e.target.value }))}
+                      />
+                    </div>
+                    {statusResult && (
+                      <span className="normal-range-status" style={{ color: statusResult.color }}>
+                        {statusResult.status}
+                        {(() => {
+                          const v = parseFloat(testValues[r.id]);
+                          const diff = v < r.min_value ? r.min_value - v : v > r.max_value ? v - r.max_value : 0;
+                          return diff > 0 ? ` (${diff.toFixed(1)} ${r.unit} outside)` : "";
+                        })()}
+                      </span>
+                    )}
+                  </div>
+                </div>
 
-                  {testValues[r.id] && (() => {
-                    const value = parseFloat(testValues[r.id]);
-                    const result = evaluateHealthStatus(
-                      value,
-                      r.min_value,
-                      r.max_value
-                    );
-
-                    const diff =
-                      value < r.min_value
-                        ? r.min_value - value
-                        : value > r.max_value
-                        ? value - r.max_value
-                        : 0;
-
-                    return (
-                      <div style={{ color: result.color, fontWeight: "bold" }}>
-                        Status: {result.status}
-                        {diff > 0 && (
-                          <span style={{ marginLeft: "8px", fontWeight: "normal" }}>
-                            ({diff.toFixed(1)} {r.unit} outside normal)
-                          </span>
-                        )}
-                      </div>
-                    );
-                  })()}
+                <div className="normal-range-actions">
+                  <button className="btn-secondary" onClick={() => startEditing(r)}>Edit</button>
+                  <button className="btn-danger" onClick={() => handleDelete(r.id)}>Delete</button>
                 </div>
               </div>
+            );
+          })}
+        </div>
+      )}
 
-              <div>
-                <button
-                  onClick={() => startEditing(r)}
-                  style={{
-                    background: "#4da6ff",
-                    color: "white",
-                    border: "none",
-                    padding: "6px 10px",
-                    borderRadius: "4px",
-                    cursor: "pointer",
-                    marginRight: "10px"
-                  }}
-                >
-                  Edit
-                </button>
-
-                <button
-                  onClick={() => handleDelete(r.id)}
-                  style={{
-                    background: "#ff4d4d",
-                    color: "white",
-                    border: "none",
-                    padding: "6px 10px",
-                    borderRadius: "4px",
-                    cursor: "pointer"
-                  }}
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
-          );
-        })}
-      </ul>
-
-      {/* Pagination */}
-      <div
-        style={{
-          marginTop: "15px",
-          display: "flex",
-          gap: "10px",
-          alignItems: "center"
-        }}
-      >
-        <button
-          disabled={safePage === 1}
-          onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-        >
-          Previous
-        </button>
-        <span>
-          Page {safePage} of {totalPages}
-        </span>
-        <button
-          disabled={safePage === totalPages}
-          onClick={() =>
-            setCurrentPage(p => Math.min(totalPages, p + 1))
-          }
-        >
-          Next
-        </button>
-      </div>
+      {/* ── Pagination ── */}
+      {totalPages > 1 && (
+        <div className="pagination">
+          <button className="btn-secondary" disabled={safePage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))}>
+            Previous
+          </button>
+          <span className="pagination-info">Page {safePage} of {totalPages}</span>
+          <button className="btn-secondary" disabled={safePage === totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}>
+            Next
+          </button>
+        </div>
+      )}
     </div>
   );
 }

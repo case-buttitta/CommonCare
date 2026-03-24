@@ -853,6 +853,139 @@ body {
   color: #7B1728;
 }
 
+/* Normal Ranges */
+.normal-ranges-form-card {
+  background: var(--white);
+  border-radius: 14px;
+  padding: 1.5rem;
+  box-shadow: var(--shadow);
+  margin-bottom: 1.5rem;
+}
+
+.normal-range-item {
+  background: var(--white);
+  border-radius: 12px;
+  box-shadow: var(--shadow);
+  padding: 1rem 1.25rem;
+  margin-bottom: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  border-left: 5px solid #d0d0d0;
+  transition: box-shadow 0.2s;
+}
+
+.normal-range-item:hover {
+  box-shadow: var(--shadow-hover, 0 4px 16px rgba(0,0,0,0.12));
+}
+
+.normal-range-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.normal-range-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.normal-range-values {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.normal-range-test {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-top: 0.4rem;
+}
+
+.normal-range-status {
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.normal-range-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-left: 1rem;
+  flex-shrink: 0;
+}
+
+.normal-ranges-list {
+  margin-bottom: 1rem;
+}
+
+.form-error-banner {
+  background: #ffeaea;
+  color: #b30000;
+  border: 1px solid #ffcccc;
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+}
+
+.form-inline-error {
+  color: #c0392b;
+  font-size: 0.85rem;
+  margin: -0.5rem 0 0.5rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 0.5rem;
+}
+
+.pagination {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  margin-top: 1rem;
+}
+
+.pagination-info {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+/* Toast notification */
+.toast {
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #323232;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  z-index: 9999;
+  animation: toast-in 0.2s ease;
+  pointer-events: none;
+}
+
+.toast.error {
+  background: #b30000;
+}
+
+.toast.success {
+  background: #27ae60;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(-50%) translateY(8px); }
+  to   { opacity: 1; transform: translateX(-50%) translateY(0); }
+}
+
 /* Booking Form */
 .booking-form {
   background: var(--white);
