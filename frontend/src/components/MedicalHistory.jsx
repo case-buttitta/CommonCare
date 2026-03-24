@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { api } from "../api";
 import "./MedicalHistory.css";
 import ConfirmModal from "./ConfirmationModal.jsx";
 
@@ -25,7 +26,7 @@ const MedicalHistory = ({ patientId, userType }) => {
   const fetchHistory = async () => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`/api/patients/${patientId}/history`, {
+      const response = await api(`/api/patients/${patientId}/history`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
@@ -52,7 +53,7 @@ const MedicalHistory = ({ patientId, userType }) => {
 
       const method = editingId ? "PUT" : "POST";
 
-      const response = await fetch(url, {
+      const response = await api(url, {
         method,
         headers: {
           "Content-Type": "application/json",
@@ -74,7 +75,7 @@ const MedicalHistory = ({ patientId, userType }) => {
   const handleDelete = async (id) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`/api/history/${id}`, {
+      const response = await api(`/api/history/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
+import { api } from './api';
 import MedicalHistory from './components/MedicalHistory';
 import BiomarkerChart from './components/BiomarkerChart';
 import NormalRanges from "./components/NormalRanges";
@@ -39,8 +40,8 @@ export default function StaffDashboard() {
         setLoading(true);
         try {
             const [pRes, aRes] = await Promise.all([
-                fetch('/api/patients', { headers }),
-                fetch('/api/appointments', { headers }),
+                api('/api/patients', { headers }),
+                api('/api/appointments', { headers }),
             ]);
             if (pRes.ok) setPatients(await pRes.json());
             if (aRes.ok) setAllAppointments(await aRes.json());
@@ -56,8 +57,8 @@ export default function StaffDashboard() {
         setSelectedAppointment(null);
         try {
             const [bioRes, apptRes] = await Promise.all([
-                fetch(`/api/patients/${patient.id}/biomarkers`, { headers }),
-                fetch(`/api/appointments?patient_id=${patient.id}`, { headers }),
+                api(`/api/patients/${patient.id}/biomarkers`, { headers }),
+                api(`/api/appointments?patient_id=${patient.id}`, { headers }),
             ]);
             if (bioRes.ok) setPatientBiomarkers(await bioRes.json());
             if (apptRes.ok) setPatientAppointments(await apptRes.json());
@@ -79,7 +80,7 @@ export default function StaffDashboard() {
         setFormSubmitting(true);
 
         try {
-            const res = await fetch(`/api/appointments/${selectedAppointment.id}`, {
+            const res = await api(`/api/appointments/${selectedAppointment.id}`, {
                 method: 'PUT',
                 headers,
                 body: JSON.stringify({

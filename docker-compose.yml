@@ -1,26 +1,5 @@
 services:
-  db:
-    profiles: ["dev", "prod"]
-    image: postgres:15-alpine
-    container_name: commoncare-db
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: commoncare
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./db:/db
-    ports:
-      - "5432:5432"
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
   backend:
-    profiles: ["dev", "prod"]
     build:
       context: ./backend
       dockerfile: Dockerfile
@@ -29,45 +8,11 @@ services:
       - .env
     environment:
       SECRET_KEY: docker-secret-key
-      FLASK_ENV: development
-      DB_EXPORT_PATH: /db/init.sql
     ports:
       - "5001:5000"
     volumes:
       - ./backend:/app
-      - ./db:/db
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     restart: on-failure
-    command: >
-      sh -c "
-        echo 'Starting backend with Aiven DB...';
-        python run.py
-      "
-
-  frontend:
-    profiles: ["dev"]
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile.dev
-    volumes:
-      - ./frontend:/app
-      - node_modules:/app/node_modules
-    ports:
-      - "5173:5173"
-    environment:
-      - CHOKIDAR_USEPOLLING=true
-    depends_on:
-      - backend
-
-  frontend-prod:
-    profiles: ["prod"]
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    ports:
-      - "8080:80"
-    depends_on:
-      - backend
-
-volumes:
-  postgres_data:
-  node_modules:

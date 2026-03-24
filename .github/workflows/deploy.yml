@@ -38,6 +38,7 @@ jobs:
         working-directory: frontend
         env:
           GITHUB_PAGES: true
+          VITE_API_URL: https://backend-production-3564d.up.railway.app
 
       - name: Copy index.html as 404.html for SPA routing
         run: cp frontend/dist/index.html frontend/dist/404.html

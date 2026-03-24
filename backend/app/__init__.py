@@ -14,7 +14,11 @@ def create_app(config_class=Config):
     api = Api(app)
 
     db.init_app(app)
-    CORS(app)
+    CORS(app, origins=[
+        "https://case-buttitta.github.io",
+        "http://localhost:5173",
+        "http://localhost:5001",
+    ])
 
     from app.routes import main
     app.register_blueprint(main)
@@ -24,5 +28,8 @@ def create_app(config_class=Config):
     
     from app.api_history import blp as history_blp
     api.register_blueprint(history_blp)
+
+    with app.app_context():
+        db.create_all()
 
     return app

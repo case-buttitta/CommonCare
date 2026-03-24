@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../AuthContext';
+import { api } from '../api';
 import './MessagingWidget.css';
 
 const EMOJI_LIST = ['👍', '❤️', '😂', '😮', '😢', '🙏', '🎉', '💯', '🔥', '👏', '✅', '❌'];
@@ -51,7 +52,7 @@ export default function MessagingWidget() {
 
   const fetchUnreadCount = useCallback(async () => {
     try {
-      const res = await fetch('/api/messaging/unread-count', { headers });
+      const res = await api('/api/messaging/unread-count', { headers });
       if (res.ok) {
         const data = await res.json();
         setUnreadCount(data.unread_count);
@@ -64,7 +65,7 @@ export default function MessagingWidget() {
 
   const fetchConversations = async () => {
     try {
-      const res = await fetch('/api/conversations', { headers });
+      const res = await api('/api/conversations', { headers });
       if (res.ok) setConversations(await res.json());
     } catch (err) {
       console.error('Failed to fetch conversations:', err);
@@ -73,7 +74,7 @@ export default function MessagingWidget() {
 
   const fetchContacts = async () => {
     try {
-      const res = await fetch('/api/messaging/contacts', { headers });
+      const res = await api('/api/messaging/contacts', { headers });
       if (res.ok) setContacts(await res.json());
     } catch (err) {
       console.error('Failed to fetch contacts:', err);
@@ -82,7 +83,7 @@ export default function MessagingWidget() {
 
   const fetchMessages = async (convoId) => {
     try {
-      const res = await fetch(`/api/conversations/${convoId}/messages`, { headers });
+      const res = await api(`/api/conversations/${convoId}/messages`, { headers });
       if (res.ok) {
         setMessages(await res.json());
         fetchUnreadCount();
@@ -94,7 +95,7 @@ export default function MessagingWidget() {
 
   const fetchMessageRequests = async () => {
     try {
-      const res = await fetch('/api/message-requests', { headers });
+      const res = await api('/api/message-requests', { headers });
       if (res.ok) setMessageRequests(await res.json());
     } catch (err) {
       console.error('Failed to fetch message requests:', err);
@@ -104,7 +105,7 @@ export default function MessagingWidget() {
   const fetchReferences = async (convoId, query = '') => {
     try {
       const url = `/api/messaging/references?conversation_id=${convoId}&q=${encodeURIComponent(query)}`;
-      const res = await fetch(url, { headers });
+      const res = await api(url, { headers });
       if (res.ok) setReferences(await res.json());
     } catch (err) {
       console.error('Failed to fetch references:', err);
@@ -114,7 +115,7 @@ export default function MessagingWidget() {
   const fetchRefDetail = async (type, id) => {
     setLoadingRefDetail(true);
     try {
-      const res = await fetch(`/api/messaging/reference-detail?type=${type}&id=${id}`, { headers });
+      const res = await api(`/api/messaging/reference-detail?type=${type}&id=${id}`, { headers });
       if (res.ok) {
         setRefDetail(await res.json());
         setShowRefDetail(true);
@@ -167,7 +168,7 @@ export default function MessagingWidget() {
 
     // It's a contact - find or create conversation
     try {
-      const res = await fetch('/api/conversations', {
+      const res = await api('/api/conversations', {
         method: 'POST',
         headers,
         body: JSON.stringify({ user_id: contactOrConvo.id }),
@@ -198,7 +199,7 @@ export default function MessagingWidget() {
     };
 
     try {
-      const res = await fetch(`/api/conversations/${activeConvo.id}/messages`, {
+      const res = await api(`/api/conversations/${activeConvo.id}/messages`, {
         method: 'POST',
         headers,
         body: JSON.stringify(body),
@@ -218,7 +219,7 @@ export default function MessagingWidget() {
 
   const toggleReaction = async (messageId, emoji) => {
     try {
-      await fetch(`/api/messages/${messageId}/reactions`, {
+      await api(`/api/messages/${messageId}/reactions`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ emoji }),
@@ -234,7 +235,7 @@ export default function MessagingWidget() {
     setSearchQuery(query);
     if (query.length < 2) { setSearchResults([]); return; }
     try {
-      const res = await fetch(`/api/messaging/search-users?q=${encodeURIComponent(query)}`, { headers });
+      const res = await api(`/api/messaging/search-users?q=${encodeURIComponent(query)}`, { headers });
       if (res.ok) setSearchResults(await res.json());
     } catch (err) {
       console.error('Search failed:', err);
@@ -243,7 +244,7 @@ export default function MessagingWidget() {
 
   const sendRequest = async (toUserId) => {
     try {
-      const res = await fetch('/api/message-requests', {
+      const res = await api('/api/message-requests', {
         method: 'POST',
         headers,
         body: JSON.stringify({ to_user_id: toUserId, message: requestMessage }),
@@ -264,7 +265,7 @@ export default function MessagingWidget() {
 
   const respondToRequest = async (requestId, action) => {
     try {
-      const res = await fetch(`/api/message-requests/${requestId}`, {
+      const res = await api(`/api/message-requests/${requestId}`, {
         method: 'PUT',
         headers,
         body: JSON.stringify({ action }),

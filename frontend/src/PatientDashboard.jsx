@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
+import { api } from "./api";
 import MedicalHistory from "./components/MedicalHistory";
 import BiomarkerChart from "./components/BiomarkerChart";
 import MessagingWidget from "./components/MessagingWidget";
@@ -38,9 +39,9 @@ export default function PatientDashboard() {
     setLoading(true);
     try {
       const [bioRes, apptRes, staffRes] = await Promise.all([
-        fetch(`/api/patients/${user.id}/biomarkers`, { headers }),
-        fetch("/api/appointments", { headers }),
-        fetch("/api/staff", { headers }),
+        api(`/api/patients/${user.id}/biomarkers`, { headers }),
+        api("/api/appointments", { headers }),
+        api("/api/staff", { headers }),
       ]);
       if (bioRes.ok) setBiomarkers(await bioRes.json());
       if (apptRes.ok) setAppointments(await apptRes.json());
@@ -56,7 +57,7 @@ export default function PatientDashboard() {
     e.preventDefault();
     setBookingSubmitting(true);
     try {
-      const res = await fetch("/api/appointments", {
+      const res = await api("/api/appointments", {
         method: "POST",
         headers,
         body: JSON.stringify({

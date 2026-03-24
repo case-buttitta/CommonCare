@@ -4,10 +4,18 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
+def _fix_db_url(url):
+    """Convert postgres:// to postgresql+psycopg:// for SQLAlchemy compatibility."""
+    if url and url.startswith('postgres://'):
+        url = url.replace('postgres://', 'postgresql+psycopg://', 1)
+    elif url and url.startswith('postgresql://'):
+        url = url.replace('postgresql://', 'postgresql+psycopg://', 1)
+    return url
+
+
 class Config:
     SECRET_KEY = os.environ.get('SECRET_KEY') or 'dev-secret-key-change-in-production'
-    SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or \
-        'postgresql+psycopg://postgres:postgres@localhost:5432/commoncare'
+    SQLALCHEMY_DATABASE_URI = _fix_db_url(os.environ.get('DATABASE_URL'))
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     
     # OpenAPI Config

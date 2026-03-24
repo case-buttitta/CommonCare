@@ -130,7 +130,8 @@ def seed_data():
     print("✓ Seed data created: patient@test.com / doctor@test.com (password123)")
 
 if __name__ == '__main__':
+    import os
+    port = int(os.environ.get('PORT', 5000))
     with app.app_context():
         db.create_all()
-        seed_data()
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='0.0.0.0', port=port)

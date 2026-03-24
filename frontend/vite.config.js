@@ -6,13 +6,7 @@ export default defineConfig({
   base: process.env.GITHUB_PAGES ? '/CommonCare/' : '/',
   plugins: [react()],
   server: {
-    host: true,          // Expose to Docker host
+    host: true,
     port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://backend:5000', // Docker service name
-        changeOrigin: true
-      }
-    }
   }
 })

@@ -2,11 +2,25 @@
 
 A healthcare management web application that connects patients with medical staff. Patients can book appointments and track their health over time; staff can record biomarker readings, manage medical histories, and monitor patient trends.
 
-**Stack:** React + Vite · Flask · PostgreSQL (Aiven Cloud)
+**Stack:** React + Vite · Flask · PostgreSQL
 
-**Live Preview:** [https://case-buttitta.github.io/CommonCare/](https://case-buttitta.github.io/CommonCare/)
+**Live App:** [https://case-buttitta.github.io/CommonCare/](https://case-buttitta.github.io/CommonCare/)
 
-> The GitHub Pages deployment is a **frontend-only** static preview. API-dependent features (login, data) require running the backend locally — see Quick Start below.
+---
+
+## Architecture
+
+| Component | Provider | URL |
+|-----------|----------|-----|
+| Frontend  | GitHub Pages | [case-buttitta.github.io/CommonCare](https://case-buttitta.github.io/CommonCare/) |
+| Backend   | Railway      | [backend-production-3564d.up.railway.app](https://backend-production-3564d.up.railway.app) |
+| Database  | Aiven        | Managed PostgreSQL 15 with SSL |
+
+- The **frontend** is a static React build deployed to GitHub Pages on every push to `main`.
+- The **backend** is a Flask API running on Railway via Docker (gunicorn).
+- The **database** is hosted on Aiven Cloud — there is no local database.
+
+The frontend calls the Railway backend directly using the `VITE_API_URL` environment variable, which is set at build time in the GitHub Actions workflow.
 
 ---
 
@@ -31,129 +45,91 @@ A healthcare management web application that connects patients with medical staf
 
 ---
 
-## Quick Start (Docker)
-
-The easiest way to run the full stack locally.
-
-**Prerequisites:** [Docker](https://docs.docker.com/get-docker/) with the Compose plugin
-
-```bash
-# Clone the repo, then from the project root:
-
-# Linux / macOS
-./start.sh
-
-# Windows
-start.bat
-```
-
-The dev server starts at **http://localhost:5173**
-
-To stop all containers:
-
-```bash
-docker compose down
-```
-
-### What Docker runs
-
-| Service  | Port  | Description                   |
-|----------|-------|-------------------------------|
-| frontend | 5173  | Vite dev server (HMR enabled) |
-| backend  | 5000  | Flask API                     |
-
-The database is hosted on Aiven Cloud — no local Postgres container is needed.
-
----
-
-## Manual Setup (No Docker)
-
-Use this if you prefer to run services directly on your machine.
+## Local Development
 
 ### Prerequisites
 
-- Python 3.11
-- Node.js (LTS)
-- PostgreSQL 15+ (only needed if running a local DB instead of the cloud one)
+- [Docker](https://docs.docker.com/get-docker/) with the Compose plugin
+- [Node.js](https://nodejs.org/) (LTS) for running the frontend locally
+- Access to the encrypted secrets file (`secrets.enc`)
 
-### 1. Environment variables
+### 1. Decrypt environment variables
 
-Copy the example env file and fill in your values:
-
-```bash
-cp .env.example .env
-```
-
-The two required variables are:
-
-| Variable       | Description                            | Default (local DB)                                             |
-|----------------|----------------------------------------|----------------------------------------------------------------|
-| `DATABASE_URL` | PostgreSQL connection string           | `postgresql+psycopg://postgres:postgres@localhost:5432/commoncare` |
-| `SECRET_KEY`   | Flask secret key for JWT signing       | Any random string works for development                        |
-
-> The repo's `.env` is pre-configured to use the shared Aiven Cloud database. You can leave it as-is or point `DATABASE_URL` at a local Postgres instance.
-
-Set cloud secrets to use the cloud db
 ```bash
 python manage_secrets.py decrypt
+# Password: 2kiwis
 ```
 
-password despite best practices, so we dont lose more points, is "2kiwis"
+This creates a `.env` file containing the Aiven `DATABASE_URL`.
 
-### 2. Local database (skip if using Aiven)
-
-If you want a fully local setup, create a Postgres database:
-
-```sql
-CREATE DATABASE commoncare;
-```
-
-Then initialise the schema:
+### 2. Start the backend
 
 ```bash
-psql -U postgres -d commoncare -f db/init.sql
+docker compose up --build
 ```
 
-### 3. Backend
+The Flask API will be available at **http://localhost:5001**.
 
-From the repo root, install Python dependencies and start Flask:
-
-```bash
-pip install -r backend/requirements.txt
-python backend/run.py
-```
-
-The API runs at **http://localhost:5000**
-
-**Linux / macOS alternative** — export vars inline:
-```bash
-DATABASE_URL="postgresql+psycopg://postgres:postgres@localhost:5432/commoncare" \
-SECRET_KEY="dev-secret-key" \
-python backend/run.py
-```
-
-**Windows (PowerShell) alternative:**
-```powershell
-$env:DATABASE_URL="postgresql+psycopg://postgres:postgres@localhost:5432/commoncare"
-$env:SECRET_KEY="dev-secret-key"
-python backend/run.py
-```
-
-### 4. Frontend
+### 3. Start the frontend
 
 In a separate terminal:
 
 ```bash
 cd frontend
 npm install
-npm run dev
+VITE_API_URL=http://localhost:5001 npm run dev
 ```
 
-Vite starts at **http://localhost:5173**
+On Windows (PowerShell):
 
-### 5. Running tests
+```powershell
+cd frontend
+npm install
+$env:VITE_API_URL="http://localhost:5001"; npm run dev
+```
 
-From the repo root:
+The frontend will be available at **http://localhost:5173**.
+
+### 4. Stop
+
+```bash
+docker compose down
+```
+
+---
+
+## Deployment
+
+### GitHub Pages (Frontend)
+
+The frontend auto-deploys on every push to `main` via `.github/workflows/deploy.yml`. The workflow sets `VITE_API_URL` to the Railway backend URL at build time.
+
+**One-time setup (repo owner):**
+
+1. Go to the repo on GitHub → **Settings** → **Pages**
+2. Under **Source**, select **GitHub Actions**
+3. Push to `main` — deploys automatically
+
+### Railway (Backend)
+
+The backend deploys from the `backend/` directory using its `Dockerfile`. Railway builds and runs the container automatically.
+
+**Environment variables to set in Railway dashboard:**
+
+| Variable       | Value |
+|----------------|-------|
+| `DATABASE_URL` | `check manage_secrets` |
+| `SECRET_KEY`   | Any random string for JWT signing |
+
+> The backend auto-converts `postgres://` to `postgresql+psycopg://` for SQLAlchemy compatibility.
+
+### Aiven (Database)
+
+The PostgreSQL database is hosted on Aiven Cloud. The connection string is stored encrypted in `secrets.enc` and set as `DATABASE_URL` on Railway.
+
+---
+
+## Running Tests
 
 ```bash
 python -m pytest tests
@@ -164,42 +140,38 @@ python -m pytest tests
 ## Project Structure
 
 ```
-ITSC4155_Project/
+CommonCare/
 ├── backend/
 │   ├── app/
-│   │   ├── __init__.py       # App factory
+│   │   ├── __init__.py       # App factory, CORS config
 │   │   ├── auth.py           # JWT helpers & auth routes
 │   │   ├── models.py         # SQLAlchemy models
 │   │   └── routes.py         # API endpoints
-│   ├── config.py
-│   ├── run.py                # Entry point
+│   ├── config.py             # DB URL auto-fix, app config
+│   ├── run.py                # Dev entry point
+│   ├── seed_cloud_db.py      # Seed script for Aiven DB
 │   ├── requirements.txt
-│   └── Dockerfile
+│   └── Dockerfile            # Production build (gunicorn)
 ├── frontend/
 │   ├── src/
+│   │   ├── api.js            # API helper (prepends VITE_API_URL)
 │   │   ├── App.jsx
-│   │   ├── AuthContext.jsx   # Auth state (Context API)
+│   │   ├── AuthContext.jsx
 │   │   ├── Login.jsx
 │   │   ├── Signup.jsx
 │   │   ├── PatientDashboard.jsx
 │   │   ├── StaffDashboard.jsx
 │   │   └── components/
-│   │       ├── BiomarkerChart.jsx
-│   │       ├── MedicalHistory.jsx
-│   │       └── ConfirmationModal.jsx
-│   ├── Dockerfile
-│   ├── Dockerfile.dev
-│   ├── nginx.conf            # Used in production builds
 │   └── vite.config.js
 ├── db/
-│   └── init.sql              # Schema + seed data
+│   └── init.sql              # Reference schema
 ├── .github/
 │   └── workflows/
-│       └── deploy.yml        # GitHub Pages auto-deploy
-├── docker-compose.yml
-├── .env.example
-├── start.sh                  # Linux/macOS Docker launcher
-└── start.bat                 # Windows Docker launcher
+│       └── deploy.yml        # GitHub Pages deploy (sets VITE_API_URL)
+├── docker-compose.yml        # Local backend dev only
+├── manage_secrets.py         # Encrypt/decrypt .env secrets
+├── secrets.enc               # Encrypted environment variables
+└── pytest.ini
 ```
 
 ---
@@ -226,24 +198,9 @@ ITSC4155_Project/
 
 ---
 
-## GitHub Pages Deployment
-
-The frontend auto-deploys to GitHub Pages on every push to `main` via the workflow in `.github/workflows/deploy.yml`.
-
-### One-time setup (repo owner)
-
-1. Go to the repo on GitHub → **Settings** → **Pages**
-2. Under **Source**, select **GitHub Actions**
-3. Push to `main` — the workflow will build and deploy automatically
-4. The site will be live at `https://case-buttitta.github.io/CommonCare/`
-
-That's it — no other configuration needed. Future pushes to `main` will redeploy automatically.
-
----
-
 ## Test Accounts
 
-The shared cloud database includes seeded test accounts:
+The Aiven cloud database includes seeded test accounts:
 
 | Role    | Email               | Password    |
 |---------|---------------------|-------------|

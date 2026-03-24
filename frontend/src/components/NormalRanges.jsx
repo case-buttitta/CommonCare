@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { api } from "../api";
 
 const BIOMARKER_OPTIONS = [
   "blood_pressure_systolic",
@@ -80,7 +81,7 @@ export default function NormalRanges() {
 
   // Fetch existing ranges
   useEffect(() => {
-    fetch("/api/normal-ranges", {
+    api("/api/normal-ranges", {
       headers: { Authorization: `Bearer ${token}` }
     })
       .then(res => res.json())
@@ -129,7 +130,7 @@ export default function NormalRanges() {
   const handleDelete = async (id) => {
     if (!confirm("Are you sure you want to delete this range?")) return;
 
-    const res = await fetch(`/api/normal-ranges/${id}`, {
+    const res = await api(`/api/normal-ranges/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` }
     });
@@ -184,7 +185,7 @@ export default function NormalRanges() {
 
     // EDIT MODE
     if (editingId !== null) {
-      const res = await fetch(`/api/normal-ranges/${editingId}`, {
+      const res = await api(`/api/normal-ranges/${editingId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
@@ -206,7 +207,7 @@ export default function NormalRanges() {
     }
 
     // CREATE MODE
-    const res = await fetch("/api/normal-ranges", {
+    const res = await api("/api/normal-ranges", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",

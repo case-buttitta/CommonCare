@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect } from 'react';
+import { api } from './api';
 
 const AuthContext = createContext(null);
 
@@ -17,7 +18,7 @@ export function AuthProvider({ children }) {
 
   const fetchUser = async () => {
     try {
-      const response = await fetch('/api/auth/me', {
+      const response = await api('/api/auth/me', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (response.ok) {
@@ -34,7 +35,7 @@ export function AuthProvider({ children }) {
   };
 
   const login = async (email, password) => {
-    const response = await fetch('/api/auth/login', {
+    const response = await api('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
@@ -50,7 +51,7 @@ export function AuthProvider({ children }) {
   };
 
   const signup = async (formData) => {
-    const response = await fetch('/api/auth/signup', {
+    const response = await api('/api/auth/signup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(formData)
@@ -72,7 +73,7 @@ export function AuthProvider({ children }) {
   };
 
   const deleteAccount = async () => {
-    const response = await fetch('/api/auth/account', {
+    const response = await api('/api/auth/account', {
       method: 'DELETE',
       headers: { 'Authorization': `Bearer ${token}` }
     });
