@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext';
 import MedicalHistory from './components/MedicalHistory';
 import BiomarkerChart from './components/BiomarkerChart';
 import NormalRanges from "./components/NormalRanges";
+import MessagingWidget from './components/MessagingWidget';
 
 
 export default function StaffDashboard() {
@@ -510,6 +511,7 @@ export default function StaffDashboard() {
         </div>
     </div>
 )}
+<MessagingWidget />
 </div>
     );
 }
