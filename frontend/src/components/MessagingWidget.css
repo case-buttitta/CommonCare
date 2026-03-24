@@ -73,7 +73,7 @@
 
 .msg-panel {
   width: 420px;
-  height: 640px;
+  height: min(520px, 70vh);
   background: #ffffff;
   border-radius: 14px 0 0 0;
   box-shadow: -4px -4px 24px rgba(0, 0, 0, 0.14), 0 0 8px rgba(0, 0, 0, 0.06);
@@ -92,7 +92,7 @@
   to {
     opacity: 1;
     transform: translateY(0);
-    max-height: 640px;
+    max-height: min(520px, 70vh);
   }
 }
 
