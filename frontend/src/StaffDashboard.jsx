@@ -112,19 +112,25 @@ export default function StaffDashboard() {
 
     const openAppointmentForm = (appt) => {
         setSelectedAppointment(appt);
-        const sysRange = normalRanges.find(r => r.biomarker_type === 'blood_pressure_systolic');
-        const diaRange = normalRanges.find(r => r.biomarker_type === 'blood_pressure_diastolic');
-        setFormBiomarkers([
-            { type: 'blood_pressure_systolic', value: '', unit: sysRange?.unit || 'mmHg', min: sysRange?.min_value, max: sysRange?.max_value },
-            { type: 'blood_pressure_diastolic', value: '', unit: diaRange?.unit || 'mmHg', min: diaRange?.min_value, max: diaRange?.max_value },
-        ]);
+        setFormBiomarkers([]);
+        setShowBiomarkerPicker(false);
         setFormNotes(appt.notes || '');
         setFormTreatments(appt.treatments || '');
     };
 
     const [showBiomarkerPicker, setShowBiomarkerPicker] = useState(false);
 
-    const removeBiomarker = (i) => setFormBiomarkers(prev => prev.filter((_, idx) => idx !== i));
+    const removeBiomarker = (i) => {
+        const type = formBiomarkers[i]?.type;
+        // Remove the whole BP pair if either component is removed
+        if (type === 'blood_pressure_systolic' || type === 'blood_pressure_diastolic') {
+            setFormBiomarkers(prev => prev.filter(b =>
+                b.type !== 'blood_pressure_systolic' && b.type !== 'blood_pressure_diastolic'
+            ));
+        } else {
+            setFormBiomarkers(prev => prev.filter((_, idx) => idx !== i));
+        }
+    };
     const updateBiomarker = (i, value) => setFormBiomarkers(prev => {
         const updated = [...prev];
         updated[i] = { ...updated[i], value };
