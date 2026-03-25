@@ -35,6 +35,23 @@ const BIOMARKER_UNITS = {
   bmi: ["kg/m²"]
 };
 
+const DEFAULT_RANGES = [
+  { biomarker_type: "blood_pressure_systolic",  min_value: 90,   max_value: 130,  unit: "mmHg"        },
+  { biomarker_type: "blood_pressure_diastolic", min_value: 60,   max_value: 85,   unit: "mmHg"        },
+  { biomarker_type: "heart_rate",               min_value: 60,   max_value: 100,  unit: "bpm"         },
+  { biomarker_type: "respiratory_rate",         min_value: 12,   max_value: 20,   unit: "breaths/min" },
+  { biomarker_type: "oxygen_saturation",        min_value: 95,   max_value: 100,  unit: "%"           },
+  { biomarker_type: "temperature",              min_value: 97.0, max_value: 99.0, unit: "°F"          },
+  { biomarker_type: "blood_glucose",            min_value: 70,   max_value: 100,  unit: "mg/dL"       },
+  { biomarker_type: "cholesterol_total",        min_value: 0,    max_value: 200,  unit: "mg/dL"       },
+  { biomarker_type: "cholesterol_ldl",          min_value: 0,    max_value: 100,  unit: "mg/dL"       },
+  { biomarker_type: "cholesterol_hdl",          min_value: 40,   max_value: 60,   unit: "mg/dL"       },
+  { biomarker_type: "triglycerides",            min_value: 0,    max_value: 150,  unit: "mg/dL"       },
+  { biomarker_type: "weight",                   min_value: 50,   max_value: 120,  unit: "kg"          },
+  { biomarker_type: "height",                   min_value: 150,  max_value: 200,  unit: "cm"          },
+  { biomarker_type: "bmi",                      min_value: 18.5, max_value: 24.9, unit: "kg/m²"       },
+];
+
 function evaluateHealthStatus(value, min, max) {
   if (value < min) {
     if (value >= min * 0.95) return { status: "Slightly Low", color: "#e67e00" };
@@ -47,6 +64,7 @@ function evaluateHealthStatus(value, min, max) {
   return { status: "Normal", color: "#27ae60" };
 }
 
+const emptyForm = { biomarker_type: "", min_value: "", max_value: "", unit: "" };
 
 export default function NormalRanges() {
   const [ranges, setRanges] = useState([]);
@@ -56,12 +74,14 @@ export default function NormalRanges() {
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 5;
   const [testValues, setTestValues] = useState({});
-  const [form, setForm] = useState({
-    biomarker_type: "",
-    min_value: "",
-    max_value: "",
-    unit: ""
-  });
+  const [form, setForm] = useState(emptyForm);
+
+  // Mode: "standard" uses the preset dropdown, "custom" uses free-text inputs
+  const [formMode, setFormMode] = useState("standard");
+
+  // Seed defaults state
+  const [seedingDefaults, setSeedingDefaults] = useState(false);
+  const [seedMessage, setSeedMessage] = useState(null); // { text, type }
 
   const token = localStorage.getItem("token");
 
@@ -76,7 +96,7 @@ export default function NormalRanges() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "biomarker_type") {
+    if (formMode === "standard" && name === "biomarker_type") {
       const units = BIOMARKER_UNITS[value] || [];
       setForm(prev => ({
         ...prev,
@@ -88,7 +108,17 @@ export default function NormalRanges() {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
+  const switchMode = (mode) => {
+    setFormMode(mode);
+    setEditingId(null);
+    setForm(emptyForm);
+    setError("");
+  };
+
   const startEditing = (range) => {
+    // If the biomarker type is in the standard list, use standard mode; otherwise custom
+    const isStandard = BIOMARKER_OPTIONS.includes(range.biomarker_type);
+    setFormMode(isStandard ? "standard" : "custom");
     setEditingId(range.id);
     setForm({
       biomarker_type: range.biomarker_type,
@@ -100,7 +130,8 @@ export default function NormalRanges() {
 
   const cancelEditing = () => {
     setEditingId(null);
-    setForm({ biomarker_type: "", min_value: "", max_value: "", unit: "" });
+    setForm(emptyForm);
+    setError("");
   };
 
   const handleDelete = async (id) => {
@@ -161,10 +192,43 @@ export default function NormalRanges() {
     if (res.ok) {
       const newRange = await res.json();
       setRanges(prev => [...prev, newRange]);
-      setForm({ biomarker_type: "", min_value: "", max_value: "", unit: "" });
+      setForm(emptyForm);
     } else {
       const data = await res.json().catch(() => ({ error: "Unknown error" }));
       setError(data.error || "Failed to add normal range");
+    }
+  };
+
+  const handleSeedDefaults = async () => {
+    setSeedingDefaults(true);
+    setSeedMessage(null);
+    setError("");
+    const existingTypes = new Set(ranges.map(r => r.biomarker_type));
+    const toAdd = DEFAULT_RANGES.filter(d => !existingTypes.has(d.biomarker_type));
+
+    if (toAdd.length === 0) {
+      setSeedMessage({ text: "All default ranges are already loaded.", type: "info" });
+      setSeedingDefaults(false);
+      return;
+    }
+
+    try {
+      const results = await Promise.all(
+        toAdd.map(d =>
+          api("/api/normal-ranges", {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+            body: JSON.stringify(d)
+          }).then(res => (res.ok ? res.json() : null))
+        )
+      );
+      const added = results.filter(Boolean);
+      setRanges(prev => [...prev, ...added]);
+      setSeedMessage({ text: `Added ${added.length} default range${added.length !== 1 ? "s" : ""}.`, type: "success" });
+    } catch {
+      setError("Failed to load default ranges.");
+    } finally {
+      setSeedingDefaults(false);
     }
   };
 
@@ -185,30 +249,100 @@ export default function NormalRanges() {
 
       {error && <div className="form-error-banner">{error}</div>}
 
+      {/* ── Load Defaults ── */}
+      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
+        <button
+          type="button"
+          className="btn-secondary"
+          onClick={handleSeedDefaults}
+          disabled={seedingDefaults}
+        >
+          {seedingDefaults ? "Loading..." : "Load Default Ranges"}
+        </button>
+        {seedMessage && (
+          <span style={{ fontSize: "0.875rem", color: seedMessage.type === "success" ? "#27ae60" : "#555" }}>
+            {seedMessage.text}
+          </span>
+        )}
+      </div>
+
       {/* ── Add / Edit Form ── */}
       <div className="normal-ranges-form-card">
-        <h4 className="subsection-title">{editingId ? "Edit Range" : "Add Normal Range"}</h4>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "0.75rem", flexWrap: "wrap", gap: "0.5rem" }}>
+          <h4 className="subsection-title" style={{ margin: 0 }}>
+            {editingId ? "Edit Range" : "Add Normal Range"}
+          </h4>
+          {!editingId && (
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <button
+                type="button"
+                className={formMode === "standard" ? "auth-button" : "btn-secondary"}
+                style={{ width: "auto", padding: "0.35rem 0.9rem", fontSize: "0.85rem" }}
+                onClick={() => switchMode("standard")}
+              >
+                Standard
+              </button>
+              <button
+                type="button"
+                className={formMode === "custom" ? "auth-button" : "btn-secondary"}
+                style={{ width: "auto", padding: "0.35rem 0.9rem", fontSize: "0.85rem" }}
+                onClick={() => switchMode("custom")}
+              >
+                Custom
+              </button>
+            </div>
+          )}
+        </div>
+
         <form onSubmit={handleSubmit}>
           <div className="form-row">
-            <div className="form-group" style={{ flex: 2 }}>
-              <label>Biomarker Type</label>
-              <select name="biomarker_type" value={form.biomarker_type} onChange={handleChange}>
-                <option value="">Select biomarker...</option>
-                {BIOMARKER_OPTIONS.map(opt => (
-                  <option key={opt} value={opt}>{formatName(opt)}</option>
-                ))}
-              </select>
-            </div>
-            <div className="form-group" style={{ flex: 1 }}>
-              <label>Unit</label>
-              <select name="unit" value={form.unit} onChange={handleChange} disabled={!form.biomarker_type}>
-                <option value="">Select unit...</option>
-                {form.biomarker_type && BIOMARKER_UNITS[form.biomarker_type]?.map(unit => (
-                  <option key={unit} value={unit}>{unit}</option>
-                ))}
-              </select>
-            </div>
+            {formMode === "standard" ? (
+              <>
+                <div className="form-group" style={{ flex: 2 }}>
+                  <label>Biomarker Type</label>
+                  <select name="biomarker_type" value={form.biomarker_type} onChange={handleChange}>
+                    <option value="">Select biomarker...</option>
+                    {BIOMARKER_OPTIONS.map(opt => (
+                      <option key={opt} value={opt}>{formatName(opt)}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Unit</label>
+                  <select name="unit" value={form.unit} onChange={handleChange} disabled={!form.biomarker_type}>
+                    <option value="">Select unit...</option>
+                    {form.biomarker_type && BIOMARKER_UNITS[form.biomarker_type]?.map(unit => (
+                      <option key={unit} value={unit}>{unit}</option>
+                    ))}
+                  </select>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="form-group" style={{ flex: 2 }}>
+                  <label>Biomarker Name</label>
+                  <input
+                    type="text"
+                    name="biomarker_type"
+                    placeholder="e.g. cortisol, ferritin, vitamin_d"
+                    value={form.biomarker_type}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className="form-group" style={{ flex: 1 }}>
+                  <label>Unit</label>
+                  <input
+                    type="text"
+                    name="unit"
+                    placeholder="e.g. ng/mL"
+                    value={form.unit}
+                    onChange={handleChange}
+                  />
+                </div>
+              </>
+            )}
           </div>
+
           <div className="form-row">
             <div className="form-group" style={{ flex: 1 }}>
               <label>Normal Min</label>
@@ -218,6 +352,7 @@ export default function NormalRanges() {
                 placeholder="e.g. 90"
                 value={form.min_value}
                 onChange={handleChange}
+                step="any"
               />
             </div>
             <div className="form-group" style={{ flex: 1 }}>
@@ -228,9 +363,10 @@ export default function NormalRanges() {
                 placeholder="e.g. 120"
                 value={form.max_value}
                 onChange={handleChange}
+                step="any"
               />
             </div>
-            {form.min_value && form.max_value && !isNaN(parseFloat(form.min_value)) && !isNaN(parseFloat(form.max_value)) && (
+            {form.min_value && form.max_value && !isNaN(parseFloat(form.min_value)) && !isNaN(parseFloat(form.max_value)) && parseFloat(form.min_value) < parseFloat(form.max_value) && (
               <div className="form-group" style={{ flex: 1 }}>
                 <label>Calculated Average</label>
                 <input
@@ -241,11 +377,13 @@ export default function NormalRanges() {
               </div>
             )}
           </div>
+
           {form.min_value && form.max_value && parseFloat(form.min_value) >= parseFloat(form.max_value) && (
             <p className="form-inline-error">Min must be less than Max</p>
           )}
+
           <div className="form-actions">
-            <button type="submit" className="auth-button" style={{ width: 'auto', padding: '0.6rem 1.5rem' }}>
+            <button type="submit" className="auth-button" style={{ width: "auto", padding: "0.6rem 1.5rem" }}>
               {editingId ? "Save Changes" : "Add Range"}
             </button>
             {editingId && (
@@ -258,7 +396,7 @@ export default function NormalRanges() {
       </div>
 
       {/* ── Search ── */}
-      <div className="form-group" style={{ maxWidth: '320px', marginBottom: '1rem' }}>
+      <div className="form-group" style={{ maxWidth: "320px", marginBottom: "1rem" }}>
         <input
           type="text"
           placeholder="Search biomarker..."
@@ -299,9 +437,8 @@ export default function NormalRanges() {
                     )}
                   </div>
 
-                  {/* Test input */}
                   <div className="normal-range-test">
-                    <div className="form-group" style={{ marginBottom: 0, flex: 1, maxWidth: '200px' }}>
+                    <div className="form-group" style={{ marginBottom: 0, flex: 1, maxWidth: "200px" }}>
                       <input
                         type="number"
                         placeholder={`Test value (${r.unit})`}
