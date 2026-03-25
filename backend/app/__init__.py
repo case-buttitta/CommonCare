@@ -56,6 +56,7 @@ def create_app(config_class=Config):
         try:
             db.create_all()
             _seed_if_needed()
+            _seed_normal_ranges()
         except Exception as e:
             print(f"Warning: db init failed: {e}")
 
@@ -150,3 +151,39 @@ def _seed_if_needed():
 
     db.session.commit()
     print("✓ Seed data created: patient@test.com / doctor@test.com (password123)")
+
+
+def _seed_normal_ranges():
+    """Seed default normal ranges if none exist yet."""
+    from app.models import NormalRange
+
+    if NormalRange.query.first():
+        return
+
+    defaults = [
+        ("blood_pressure_systolic",  90,   130,  "mmHg"),
+        ("blood_pressure_diastolic", 60,   85,   "mmHg"),
+        ("heart_rate",               60,   100,  "bpm"),
+        ("respiratory_rate",         12,   20,   "breaths/min"),
+        ("oxygen_saturation",        95,   100,  "%"),
+        ("temperature",              97.0, 99.0, "°F"),
+        ("blood_glucose",            70,   100,  "mg/dL"),
+        ("cholesterol_total",        0,    200,  "mg/dL"),
+        ("cholesterol_ldl",          0,    100,  "mg/dL"),
+        ("cholesterol_hdl",          40,   60,   "mg/dL"),
+        ("triglycerides",            0,    150,  "mg/dL"),
+        ("weight",                   50,   120,  "kg"),
+        ("height",                   150,  200,  "cm"),
+        ("bmi",                      18.5, 24.9, "kg/m²"),
+    ]
+
+    for biomarker_type, min_value, max_value, unit in defaults:
+        db.session.add(NormalRange(
+            biomarker_type=biomarker_type,
+            min_value=min_value,
+            max_value=max_value,
+            unit=unit
+        ))
+
+    db.session.commit()
+    print("✓ Default normal ranges seeded.")

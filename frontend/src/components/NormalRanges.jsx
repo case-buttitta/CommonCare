@@ -35,22 +35,6 @@ const BIOMARKER_UNITS = {
   bmi: ["kg/m²"]
 };
 
-const DEFAULT_RANGES = [
-  { biomarker_type: "blood_pressure_systolic",  min_value: 90,   max_value: 130,  unit: "mmHg"        },
-  { biomarker_type: "blood_pressure_diastolic", min_value: 60,   max_value: 85,   unit: "mmHg"        },
-  { biomarker_type: "heart_rate",               min_value: 60,   max_value: 100,  unit: "bpm"         },
-  { biomarker_type: "respiratory_rate",         min_value: 12,   max_value: 20,   unit: "breaths/min" },
-  { biomarker_type: "oxygen_saturation",        min_value: 95,   max_value: 100,  unit: "%"           },
-  { biomarker_type: "temperature",              min_value: 97.0, max_value: 99.0, unit: "°F"          },
-  { biomarker_type: "blood_glucose",            min_value: 70,   max_value: 100,  unit: "mg/dL"       },
-  { biomarker_type: "cholesterol_total",        min_value: 0,    max_value: 200,  unit: "mg/dL"       },
-  { biomarker_type: "cholesterol_ldl",          min_value: 0,    max_value: 100,  unit: "mg/dL"       },
-  { biomarker_type: "cholesterol_hdl",          min_value: 40,   max_value: 60,   unit: "mg/dL"       },
-  { biomarker_type: "triglycerides",            min_value: 0,    max_value: 150,  unit: "mg/dL"       },
-  { biomarker_type: "weight",                   min_value: 50,   max_value: 120,  unit: "kg"          },
-  { biomarker_type: "height",                   min_value: 150,  max_value: 200,  unit: "cm"          },
-  { biomarker_type: "bmi",                      min_value: 18.5, max_value: 24.9, unit: "kg/m²"       },
-];
 
 function evaluateHealthStatus(value, min, max) {
   if (value < min) {
@@ -78,10 +62,6 @@ export default function NormalRanges() {
 
   // Mode: "standard" uses the preset dropdown, "custom" uses free-text inputs
   const [formMode, setFormMode] = useState("standard");
-
-  // Seed defaults state
-  const [seedingDefaults, setSeedingDefaults] = useState(false);
-  const [seedMessage, setSeedMessage] = useState(null); // { text, type }
 
   const token = localStorage.getItem("token");
 
@@ -199,39 +179,6 @@ export default function NormalRanges() {
     }
   };
 
-  const handleSeedDefaults = async () => {
-    setSeedingDefaults(true);
-    setSeedMessage(null);
-    setError("");
-    const existingTypes = new Set(ranges.map(r => r.biomarker_type));
-    const toAdd = DEFAULT_RANGES.filter(d => !existingTypes.has(d.biomarker_type));
-
-    if (toAdd.length === 0) {
-      setSeedMessage({ text: "All default ranges are already loaded.", type: "info" });
-      setSeedingDefaults(false);
-      return;
-    }
-
-    try {
-      const results = await Promise.all(
-        toAdd.map(d =>
-          api("/api/normal-ranges", {
-            method: "POST",
-            headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-            body: JSON.stringify(d)
-          }).then(res => (res.ok ? res.json() : null))
-        )
-      );
-      const added = results.filter(Boolean);
-      setRanges(prev => [...prev, ...added]);
-      setSeedMessage({ text: `Added ${added.length} default range${added.length !== 1 ? "s" : ""}.`, type: "success" });
-    } catch {
-      setError("Failed to load default ranges.");
-    } finally {
-      setSeedingDefaults(false);
-    }
-  };
-
   const filtered = ranges
     .filter(r => r.biomarker_type.toLowerCase().includes(searchTerm.toLowerCase()))
     .sort((a, b) => a.biomarker_type.localeCompare(b.biomarker_type));
@@ -248,23 +195,6 @@ export default function NormalRanges() {
       <h3 className="section-title">Normal Ranges</h3>
 
       {error && <div className="form-error-banner">{error}</div>}
-
-      {/* ── Load Defaults ── */}
-      <div style={{ display: "flex", alignItems: "center", gap: "1rem", marginBottom: "1.25rem", flexWrap: "wrap" }}>
-        <button
-          type="button"
-          className="btn-secondary"
-          onClick={handleSeedDefaults}
-          disabled={seedingDefaults}
-        >
-          {seedingDefaults ? "Loading..." : "Load Default Ranges"}
-        </button>
-        {seedMessage && (
-          <span style={{ fontSize: "0.875rem", color: seedMessage.type === "success" ? "#27ae60" : "#555" }}>
-            {seedMessage.text}
-          </span>
-        )}
-      </div>
 
       {/* ── Add / Edit Form ── */}
       <div className="normal-ranges-form-card">
