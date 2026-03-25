@@ -472,10 +472,6 @@ export default function PatientDashboard() {
                         <input type="text" value={profileForm.full_name} onChange={e => setProfileForm(p => ({ ...p, full_name: e.target.value }))} required />
                       </div>
                       <div className="form-group">
-                        <label>Email</label>
-                        <input type="email" value={user?.email} disabled />
-                      </div>
-                      <div className="form-group">
                         <label>Location</label>
                         <input type="text" value={profileForm.location} onChange={e => setProfileForm(p => ({ ...p, location: e.target.value }))} />
                       </div>

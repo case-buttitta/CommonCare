@@ -112,25 +112,51 @@ export default function StaffDashboard() {
 
     const openAppointmentForm = (appt) => {
         setSelectedAppointment(appt);
+        const sysRange = normalRanges.find(r => r.biomarker_type === 'blood_pressure_systolic');
+        const diaRange = normalRanges.find(r => r.biomarker_type === 'blood_pressure_diastolic');
         setFormBiomarkers([
-            { type: 'blood_pressure_systolic', value: '', unit: getUnit('blood_pressure_systolic') || 'mmHg' },
-            { type: 'blood_pressure_diastolic', value: '', unit: getUnit('blood_pressure_diastolic') || 'mmHg' },
+            { type: 'blood_pressure_systolic', value: '', unit: sysRange?.unit || 'mmHg', min: sysRange?.min_value, max: sysRange?.max_value },
+            { type: 'blood_pressure_diastolic', value: '', unit: diaRange?.unit || 'mmHg', min: diaRange?.min_value, max: diaRange?.max_value },
         ]);
         setFormNotes(appt.notes || '');
         setFormTreatments(appt.treatments || '');
     };
 
-    const addBiomarker = () => setFormBiomarkers(prev => [...prev, { type: '', value: '', unit: '' }]);
+    const [showBiomarkerPicker, setShowBiomarkerPicker] = useState(false);
+
     const removeBiomarker = (i) => setFormBiomarkers(prev => prev.filter((_, idx) => idx !== i));
-    const updateBiomarker = (i, field, value) => {
-        setFormBiomarkers(prev => {
-            const updated = [...prev];
-            updated[i] = { ...updated[i], [field]: value };
-            if (field === 'type') {
-                updated[i].unit = normalRanges.find(r => r.biomarker_type === value)?.unit || '';
-            }
-            return updated;
+    const updateBiomarker = (i, value) => setFormBiomarkers(prev => {
+        const updated = [...prev];
+        updated[i] = { ...updated[i], value };
+        return updated;
+    });
+
+    const buildBiomarkerOptions = () => {
+        const addedTypes = new Set(formBiomarkers.map(b => b.type));
+        const options = [];
+        const hasSys = normalRanges.find(r => r.biomarker_type === 'blood_pressure_systolic');
+        const hasDia = normalRanges.find(r => r.biomarker_type === 'blood_pressure_diastolic');
+        if (hasSys && hasDia && !addedTypes.has('blood_pressure_systolic') && !addedTypes.has('blood_pressure_diastolic')) {
+            options.push({ label: 'Blood Pressure', types: ['blood_pressure_systolic', 'blood_pressure_diastolic'] });
+        } else {
+            if (hasSys && !addedTypes.has('blood_pressure_systolic'))
+                options.push({ label: 'Blood Pressure Systolic', types: ['blood_pressure_systolic'] });
+            if (hasDia && !addedTypes.has('blood_pressure_diastolic'))
+                options.push({ label: 'Blood Pressure Diastolic', types: ['blood_pressure_diastolic'] });
+        }
+        normalRanges
+            .filter(r => !r.biomarker_type.startsWith('blood_pressure') && !addedTypes.has(r.biomarker_type))
+            .forEach(r => options.push({ label: formatBiomarkerName(r.biomarker_type), types: [r.biomarker_type] }));
+        return options;
+    };
+
+    const addBiomarkerFromPicker = (option) => {
+        const newEntries = option.types.map(type => {
+            const range = normalRanges.find(r => r.biomarker_type === type);
+            return { type, value: '', unit: range?.unit || '', min: range?.min_value, max: range?.max_value };
         });
+        setFormBiomarkers(prev => [...prev, ...newEntries]);
+        setShowBiomarkerPicker(false);
     };
 
     const handleSubmitAppointment = async (e) => {
@@ -454,10 +480,6 @@ export default function StaffDashboard() {
                                                 <input type="text" value={profileForm.full_name} onChange={e => setProfileForm(p => ({ ...p, full_name: e.target.value }))} required />
                                             </div>
                                             <div className="form-group">
-                                                <label>Email</label>
-                                                <input type="email" value={user?.email} disabled />
-                                            </div>
-                                            <div className="form-group">
                                                 <label>Location</label>
                                                 <input type="text" value={profileForm.location} onChange={e => setProfileForm(p => ({ ...p, location: e.target.value }))} />
                                             </div>
@@ -502,41 +524,100 @@ export default function StaffDashboard() {
                         </div>
                         <form className="appointment-form" onSubmit={handleSubmitAppointment}>
                             <h4>Biomarker Readings</h4>
-                            {formBiomarkers.map((b, i) => (
-                                <div key={i} className="form-row" style={{ alignItems: 'flex-end' }}>
-                                    <div className="form-group" style={{ flex: 2 }}>
-                                        {i === 0 && <label>Biomarker</label>}
-                                        <select value={b.type} onChange={e => updateBiomarker(i, 'type', e.target.value)}>
-                                            <option value="">Select biomarker...</option>
-                                            {normalRanges.map(r => (
-                                                <option key={r.id} value={r.biomarker_type}>
-                                                    {formatBiomarkerName(r.biomarker_type)}{r.unit ? ` (${r.unit})` : ''}
-                                                </option>
-                                            ))}
-                                        </select>
+                            {formBiomarkers.map((b, i) => {
+                                const val = parseFloat(b.value);
+                                const hasVal = b.value !== '' && !isNaN(val);
+                                const isLow  = hasVal && b.min != null && val < b.min;
+                                const isHigh = hasVal && b.max != null && val > b.max;
+                                const statusColor = hasVal ? (isLow || isHigh ? '#c0392b' : '#27ae60') : undefined;
+                                const isSystolic  = b.type === 'blood_pressure_systolic';
+                                const isDiastolic = b.type === 'blood_pressure_diastolic';
+                                const isFirstBP   = isSystolic && formBiomarkers.some(x => x.type === 'blood_pressure_diastolic');
+                                return (
+                                    <div key={i}>
+                                        {isFirstBP && <p style={{ margin: '0 0 0.4rem', fontWeight: 600, color: 'var(--color-maroon, #7a1c2e)' }}>Blood Pressure</p>}
+                                        <div className="form-row" style={{ alignItems: 'flex-start', gap: '0.5rem' }}>
+                                            <div className="form-group" style={{ flex: 1, marginBottom: '0.25rem' }}>
+                                                <label style={{ fontSize: '0.8rem', color: '#555' }}>
+                                                    {(isSystolic || isDiastolic)
+                                                        ? (isSystolic ? 'Systolic' : 'Diastolic')
+                                                        : formatBiomarkerName(b.type)}
+                                                    {b.min != null && b.max != null && (
+                                                        <span style={{ fontWeight: 400, marginLeft: '0.4rem', color: '#888' }}>
+                                                            (normal {b.min}–{b.max} {b.unit})
+                                                        </span>
+                                                    )}
+                                                </label>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                    <input
+                                                        type="number"
+                                                        placeholder={b.unit || 'Value'}
+                                                        value={b.value}
+                                                        onChange={e => updateBiomarker(i, e.target.value)}
+                                                        step="any"
+                                                        style={statusColor ? { borderColor: statusColor } : {}}
+                                                    />
+                                                    {b.unit && <span style={{ color: '#666', fontSize: '0.85rem', whiteSpace: 'nowrap' }}>{b.unit}</span>}
+                                                    <button
+                                                        type="button"
+                                                        className="btn-danger"
+                                                        style={{ padding: '0.4rem 0.6rem', flexShrink: 0 }}
+                                                        onClick={() => removeBiomarker(i)}
+                                                        title="Remove"
+                                                    >✕</button>
+                                                </div>
+                                                {hasVal && b.min != null && b.max != null && (
+                                                    <p style={{ margin: '0.2rem 0 0', fontSize: '0.78rem', color: statusColor }}>
+                                                        {isLow ? `Below normal (${(b.min - val).toFixed(1)} ${b.unit} under)` :
+                                                         isHigh ? `Above normal (${(val - b.max).toFixed(1)} ${b.unit} over)` :
+                                                         'Within normal range ✓'}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
                                     </div>
-                                    <div className="form-group" style={{ flex: 1 }}>
-                                        {i === 0 && <label>Value{b.unit ? ` (${b.unit})` : ''}</label>}
-                                        <input
-                                            type="number"
-                                            placeholder="Value"
-                                            value={b.value}
-                                            onChange={e => updateBiomarker(i, 'value', e.target.value)}
-                                            step="any"
-                                        />
+                                );
+                            })}
+
+                            {/* Add Biomarker picker */}
+                            <div style={{ position: 'relative', marginBottom: '1rem', marginTop: '0.5rem' }}>
+                                <button
+                                    type="button"
+                                    className="btn-danger"
+                                    onClick={() => setShowBiomarkerPicker(p => !p)}
+                                >
+                                    Add Biomarker +
+                                </button>
+                                {showBiomarkerPicker && (
+                                    <div style={{
+                                        position: 'absolute', top: '110%', left: 0, zIndex: 50,
+                                        background: '#fff', border: '1px solid #ddd', borderRadius: '8px',
+                                        boxShadow: '0 4px 16px rgba(0,0,0,0.12)', minWidth: '220px', overflow: 'hidden'
+                                    }}>
+                                        {buildBiomarkerOptions().length === 0 ? (
+                                            <div style={{ padding: '0.75rem 1rem', color: '#888', fontSize: '0.9rem' }}>
+                                                All available biomarkers added
+                                            </div>
+                                        ) : buildBiomarkerOptions().map((opt, idx) => (
+                                            <button
+                                                key={idx}
+                                                type="button"
+                                                onClick={() => addBiomarkerFromPicker(opt)}
+                                                style={{
+                                                    display: 'block', width: '100%', textAlign: 'left',
+                                                    padding: '0.6rem 1rem', background: 'none', border: 'none',
+                                                    cursor: 'pointer', fontSize: '0.9rem',
+                                                    borderBottom: idx < buildBiomarkerOptions().length - 1 ? '1px solid #f0f0f0' : 'none'
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.background = '#f5f5f5'}
+                                                onMouseLeave={e => e.currentTarget.style.background = 'none'}
+                                            >
+                                                {opt.label}
+                                            </button>
+                                        ))}
                                     </div>
-                                    <button
-                                        type="button"
-                                        className="btn-danger"
-                                        style={{ marginBottom: '0.75rem', padding: '0.45rem 0.7rem' }}
-                                        onClick={() => removeBiomarker(i)}
-                                        title="Remove"
-                                    >✕</button>
-                                </div>
-                            ))}
-                            <button type="button" className="btn-secondary" onClick={addBiomarker} style={{ marginBottom: '1rem' }}>
-                                + Add Biomarker
-                            </button>
+                                )}
+                            </div>
                             <div className="form-group">
                                 <label>Notes</label>
                                 <textarea
