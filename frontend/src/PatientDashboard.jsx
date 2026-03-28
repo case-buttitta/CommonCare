@@ -1,24 +1,96 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { api } from "./api";
 import MedicalHistory from "./components/MedicalHistory";
 import BiomarkerChart from "./components/BiomarkerChart";
 import MessagingWidget from "./components/MessagingWidget";
 
-// Human-readable names and icons for biomarker types
+// ── SVG Icon Components ──────────────────────────────────────────────────────
+const IconHeart = ({ color = "currentColor", size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+  </svg>
+);
+const IconPulse = ({ color = "currentColor", size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+  </svg>
+);
+const IconDroplet = ({ color = "currentColor", size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
+  </svg>
+);
+const IconSun = ({ color = "currentColor", size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+  </svg>
+);
+const IconScale = ({ color = "currentColor", size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.5C12 11 14.5 8 17.5 5L21 3"/><path d="M12 13.5C12 11 9.5 8 6.5 5L3 3"/>
+  </svg>
+);
+const IconFlask = ({ color = "currentColor", size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 3h6v7l5 8H4l5-8V3z"/><line x1="9" y1="3" x2="15" y2="3"/>
+  </svg>
+);
+const IconKidney = ({ color = "currentColor", size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M8 2c-3 0-5 2.5-5 6s2 5 4 7c1 1 2 3 2 5h6c0-2 1-4 2-5 2-2 4-3.5 4-7s-2-6-5-6c-2 0-3 1-4 2-1-1-2-2-4-2z"/>
+  </svg>
+);
+const IconBone = ({ color = "currentColor", size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M18.3 5.7a2.5 2.5 0 0 1 0 3.5l-9.1 9.1a2.5 2.5 0 0 1-3.5-3.5l9.1-9.1a2.5 2.5 0 0 1 3.5 0z"/><path d="M5.7 5.7a2.5 2.5 0 0 0 0 3.5"/><path d="M18.3 18.3a2.5 2.5 0 0 0 0-3.5"/>
+  </svg>
+);
+const IconTestTube = ({ color = "currentColor", size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14.5 2v17.5c0 1.4-1.1 2.5-2.5 2.5h0c-1.4 0-2.5-1.1-2.5-2.5V2"/><path d="M8.5 2h7"/><path d="M14.5 16h-5"/>
+  </svg>
+);
+const IconCalendar = ({ color = "currentColor", size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+  </svg>
+);
+const IconClipboard = ({ color = "currentColor", size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/>
+  </svg>
+);
+const IconUser = ({ color = "currentColor", size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+  </svg>
+);
+const IconActivity = ({ color = "currentColor", size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+  </svg>
+);
+const IconCandy = ({ color = "currentColor", size = 20 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="7"/><path d="M12 5V2"/><path d="M12 22v-3"/><path d="M5 12H2"/><path d="M22 12h-3"/><path d="M9 9l5 6"/>
+  </svg>
+);
+
+// Human-readable names and SVG icons for biomarker types
 const BIOMARKER_META = {
-  blood_pressure_systolic: { label: "Blood Pressure Systolic", icon: "❤️", color: "#e63946" },
-  blood_pressure_diastolic: { label: "Blood Pressure Diastolic", icon: "❤️", color: "#e07a7a" },
-  heart_rate: { label: "Heart Rate", icon: "💓", color: "#457b9d" },
-  cholesterol_total: { label: "Cholesterol", icon: "🩸", color: "#e76f51" },
-  blood_sugar: { label: "Blood Sugar (Glucose)", icon: "🍬", color: "#f4a261" },
-  vitamin_d: { label: "Vitamin D", icon: "☀️", color: "#e9c46a" },
-  bmi: { label: "BMI", icon: "⚖️", color: "#2a9d8f" },
-  hba1c: { label: "HbA1c", icon: "🔬", color: "#264653" },
-  kidney_function_egfr: { label: "Kidney Function (eGFR)", icon: "🫘", color: "#6a994e" },
-  liver_enzymes_alt: { label: "Liver Enzymes (ALT)", icon: "🧪", color: "#bc6c25" },
-  calcium: { label: "Calcium", icon: "🦴", color: "#606c38" },
-  hemoglobin: { label: "Hemoglobin", icon: "🩸", color: "#d62828" },
+  blood_pressure_systolic:  { label: "Blood Pressure Systolic",  IconComponent: IconHeart,    color: "#e63946" },
+  blood_pressure_diastolic: { label: "Blood Pressure Diastolic", IconComponent: IconHeart,    color: "#e07a7a" },
+  heart_rate:               { label: "Heart Rate",               IconComponent: IconPulse,    color: "#457b9d" },
+  cholesterol_total:        { label: "Cholesterol",              IconComponent: IconDroplet,  color: "#e76f51" },
+  blood_sugar:              { label: "Blood Sugar (Glucose)",    IconComponent: IconCandy,    color: "#f4a261" },
+  vitamin_d:                { label: "Vitamin D",                IconComponent: IconSun,      color: "#e9c46a" },
+  bmi:                      { label: "BMI",                      IconComponent: IconScale,    color: "#2a9d8f" },
+  hba1c:                    { label: "HbA1c",                    IconComponent: IconFlask,    color: "#264653" },
+  kidney_function_egfr:     { label: "Kidney Function (eGFR)",   IconComponent: IconKidney,   color: "#6a994e" },
+  liver_enzymes_alt:        { label: "Liver Enzymes (ALT)",      IconComponent: IconTestTube, color: "#bc6c25" },
+  calcium:                  { label: "Calcium",                  IconComponent: IconBone,     color: "#606c38" },
+  hemoglobin:               { label: "Hemoglobin",               IconComponent: IconDroplet,  color: "#d62828" },
 };
 
 function getBiomarkerStatus(type, value, normalRanges) {
@@ -26,49 +98,88 @@ function getBiomarkerStatus(type, value, normalRanges) {
   if (!range) return { status: "Unknown", className: "status-unknown" };
   if (value < range.min_value) return { status: "Low", className: "status-low" };
   if (value > range.max_value) {
-    // Borderline check: within 10% above max
     const borderline = range.max_value * 1.1;
     if (value <= borderline) return { status: "Borderline", className: "status-borderline" };
-    if (type === "bmi" && value >= 25 && value < 30) return { status: "Overweight", className: "status-borderline" };
-    if (type === "hba1c" && value > range.max_value && value <= 6.4) return { status: "Elevated", className: "status-elevated" };
     return { status: "High", className: "status-high" };
   }
   return { status: "Normal", className: "status-normal" };
 }
 
-function getMiniTrend(history, type) {
-  if (!history || !history[type] || history[type].length < 2) return null;
-  const data = history[type].slice(-6);
-  return data.map((d) => d.value);
-}
+// ── Normal Distribution Bell Curve ───────────────────────────────────────────
+function NormalDistCurve({ value, normalRange, statusClass }) {
+  if (!normalRange) return null;
+  const { min_value: minVal, max_value: maxVal } = normalRange;
 
-function MiniSparkline({ values, status }) {
-  if (!values || values.length < 2) return null;
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const range = max - min || 1;
-  const w = 60;
-  const h = 24;
-  const points = values.map((v, i) => {
-    const x = (i / (values.length - 1)) * w;
-    const y = h - ((v - min) / range) * (h - 4) - 2;
-    return `${x},${y}`;
-  }).join(" ");
-  const color = status === "status-normal" ? "#16a34a" :
-    status === "status-high" ? "#dc2626" :
-      status === "status-low" ? "#2563eb" :
-        status === "status-borderline" ? "#d97706" :
-          status === "status-elevated" ? "#ea580c" : "#94a3b8";
+  // Mean = midpoint, sigma chosen so min/max is ~2 sigma from mean
+  const mean = (minVal + maxVal) / 2;
+  const sigma = (maxVal - minVal) / 4;
+
+  // Draw range: mean ± 4 sigma
+  const drawMin = mean - 4 * sigma;
+  const drawMax = mean + 4 * sigma;
+
+  const w = 200;
+  const h = 60;
+  const padY = 6;
+
+  // Gaussian function
+  const gauss = (x) => Math.exp(-0.5 * Math.pow((x - mean) / sigma, 2));
+
+  // Generate curve points
+  const steps = 80;
+  const points = [];
+  for (let i = 0; i <= steps; i++) {
+    const xVal = drawMin + (i / steps) * (drawMax - drawMin);
+    const xPx = (i / steps) * w;
+    const yVal = gauss(xVal);
+    const yPx = h - padY - yVal * (h - 2 * padY);
+    points.push(`${xPx},${yPx}`);
+  }
+
+  // Patient's value position on the curve
+  const clampedVal = Math.max(drawMin, Math.min(drawMax, value));
+  const patientX = ((clampedVal - drawMin) / (drawMax - drawMin)) * w;
+  const patientY = h - padY - gauss(clampedVal) * (h - 2 * padY);
+
+  // Normal range shading region
+  const rangeStartX = ((minVal - drawMin) / (drawMax - drawMin)) * w;
+  const rangeEndX = ((maxVal - drawMin) / (drawMax - drawMin)) * w;
+
+  // Shaded area path under the curve within normal range
+  const shadedPoints = [];
+  for (let i = 0; i <= steps; i++) {
+    const xVal = drawMin + (i / steps) * (drawMax - drawMin);
+    if (xVal < minVal || xVal > maxVal) continue;
+    const xPx = (i / steps) * w;
+    const yVal = gauss(xVal);
+    const yPx = h - padY - yVal * (h - 2 * padY);
+    shadedPoints.push({ x: xPx, y: yPx });
+  }
+  let shadedPath = "";
+  if (shadedPoints.length > 1) {
+    shadedPath = `M ${shadedPoints[0].x},${h - padY} `;
+    shadedPoints.forEach((p) => { shadedPath += `L ${p.x},${p.y} `; });
+    shadedPath += `L ${shadedPoints[shadedPoints.length - 1].x},${h - padY} Z`;
+  }
+
+  const dotColor = statusClass === "status-normal" ? "#16a34a" :
+    statusClass === "status-high" ? "#dc2626" :
+      statusClass === "status-low" ? "#2563eb" :
+        statusClass === "status-borderline" ? "#d97706" : "#94a3b8";
+
   return (
-    <svg width={w} height={h} className="mini-sparkline">
-      <polyline
-        points={points}
-        fill="none"
-        stroke={color}
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
+    <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet" className="bell-curve-svg">
+      {/* Normal range shading */}
+      {shadedPath && <path d={shadedPath} fill="#16a34a" opacity="0.1" />}
+      {/* Range boundary lines */}
+      <line x1={rangeStartX} y1={padY} x2={rangeStartX} y2={h - padY} stroke="#16a34a" strokeWidth="1" strokeDasharray="3 2" opacity="0.4" />
+      <line x1={rangeEndX} y1={padY} x2={rangeEndX} y2={h - padY} stroke="#16a34a" strokeWidth="1" strokeDasharray="3 2" opacity="0.4" />
+      {/* Bell curve */}
+      <polyline points={points.join(" ")} fill="none" stroke="#94a3b8" strokeWidth="1.5" />
+      {/* Patient's value dot */}
+      <circle cx={patientX} cy={patientY} r="5" fill={dotColor} stroke="#fff" strokeWidth="1.5" />
+      {/* Value line down */}
+      <line x1={patientX} y1={patientY + 5} x2={patientX} y2={h - padY} stroke={dotColor} strokeWidth="1" strokeDasharray="2 2" opacity="0.5" />
     </svg>
   );
 }
@@ -189,62 +300,28 @@ export default function PatientDashboard() {
   const pendingAppointments = appointments.filter((a) => a.status === "pending");
   const pastAppointments = appointments.filter((a) => a.status !== "pending");
 
-  // Get latest appointment treatments for recommended treatments section
-  const latestCompletedAppt = pastAppointments.find((a) => a.status === "completed");
-  const recommendedTreatments = [];
-  if (latestCompletedAppt?.treatments) {
-    latestCompletedAppt.treatments.split('.').filter(Boolean).forEach((t, i) => {
-      const trimmed = t.trim();
-      if (trimmed) recommendedTreatments.push(trimmed);
-    });
-  }
-
-  // Build recommendation items from medical history-like data and latest biomarkers
+  // Build recommendation items from latest biomarkers vs normal ranges
   const getRecommendations = () => {
     if (!biomarkers?.latest || normalRanges.length === 0) return [];
     const recs = [];
     const latest = biomarkers.latest;
 
-    // Check each biomarker against ranges
-    if (latest.blood_pressure_systolic) {
-      const { status } = getBiomarkerStatus("blood_pressure_systolic", latest.blood_pressure_systolic.value, normalRanges);
-      if (status !== "Normal") recs.push({
-        icon: "❤️", title: "Reduce Blood Pressure",
-        detail: "Continue medication • 30 min exercise, 5x/week",
-        color: "#e63946"
-      });
-    }
-    if (latest.vitamin_d) {
-      const { status } = getBiomarkerStatus("vitamin_d", latest.vitamin_d.value, normalRanges);
-      if (status !== "Normal") recs.push({
-        icon: "☀️", title: "Vitamin D Deficiency",
-        detail: "Take 2000 IU daily • Repeat test in 3 months",
-        color: "#e9c46a"
-      });
-    }
-    if (latest.cholesterol_total) {
-      const { status } = getBiomarkerStatus("cholesterol_total", latest.cholesterol_total.value, normalRanges);
-      if (status !== "Normal") recs.push({
-        icon: "🩸", title: "High Cholesterol",
-        detail: "Diet: Low fat, high fiber • Recheck in 2 months",
-        color: "#e76f51"
-      });
-    }
-    if (latest.bmi) {
-      const { status } = getBiomarkerStatus("bmi", latest.bmi.value, normalRanges);
-      if (status !== "Normal") recs.push({
-        icon: "⚖️", title: "Weight Management",
-        detail: "Target BMI < 25 • Diet and exercise plan",
-        color: "#2a9d8f"
-      });
-    }
-    if (latest.hba1c) {
-      const { status } = getBiomarkerStatus("hba1c", latest.hba1c.value, normalRanges);
-      if (status !== "Normal") recs.push({
-        icon: "🔬", title: "Blood Sugar Monitoring",
-        detail: "HbA1c slightly elevated • Monitor carb intake",
-        color: "#264653"
-      });
+    const checks = [
+      { key: "blood_pressure_systolic", title: "Reduce Blood Pressure",  detail: "Continue medication + 30 min exercise, 5x/week", IconComponent: IconHeart, color: "#e63946" },
+      { key: "vitamin_d",              title: "Vitamin D Deficiency",    detail: "Take 2000 IU daily + Repeat test in 3 months",   IconComponent: IconSun,     color: "#e9c46a" },
+      { key: "cholesterol_total",      title: "High Cholesterol",        detail: "Diet: Low fat, high fiber + Recheck in 2 months", IconComponent: IconDroplet, color: "#e76f51" },
+      { key: "bmi",                    title: "Weight Management",       detail: "Target BMI < 25 + Diet and exercise plan",        IconComponent: IconScale,   color: "#2a9d8f" },
+      { key: "hba1c",                  title: "Blood Sugar Monitoring",  detail: "HbA1c elevated + Monitor carb intake",            IconComponent: IconFlask,   color: "#264653" },
+      { key: "blood_sugar",            title: "Blood Glucose Elevated",  detail: "Monitor fasting glucose + Dietary adjustments",   IconComponent: IconCandy,   color: "#f4a261" },
+    ];
+
+    for (const chk of checks) {
+      if (latest[chk.key]) {
+        const { status } = getBiomarkerStatus(chk.key, latest[chk.key].value, normalRanges);
+        if (status !== "Normal") {
+          recs.push(chk);
+        }
+      }
     }
     return recs;
   };
@@ -294,7 +371,7 @@ export default function PatientDashboard() {
             {/* ── OVERVIEW TAB ── */}
             {activeTab === "overview" && (
               <div className="tab-panel">
-                {/* Two-column layout: Medical History + Recommended Treatments */}
+                {/* Two-column: Medical History + Recommendations */}
                 <div className="overview-top-grid">
                   <div className="overview-left">
                     <MedicalHistory patientId={user.id} userType="patient" />
@@ -305,79 +382,65 @@ export default function PatientDashboard() {
                       <p className="recommendations-subtitle">Based on your current health</p>
                       {getRecommendations().length > 0 ? (
                         <div className="recommendations-list">
-                          {getRecommendations().map((rec, i) => (
-                            <div key={i} className="recommendation-item">
-                              <div className="recommendation-icon" style={{ background: rec.color + '20', color: rec.color }}>
-                                {rec.icon}
+                          {getRecommendations().map((rec, i) => {
+                            const RecIcon = rec.IconComponent;
+                            return (
+                              <div key={i} className="recommendation-item">
+                                <div className="recommendation-icon" style={{ background: rec.color + '20', color: rec.color }}>
+                                  <RecIcon color={rec.color} size={18} />
+                                </div>
+                                <div className="recommendation-content">
+                                  <div className="recommendation-title">{rec.title}</div>
+                                  <div className="recommendation-detail">{rec.detail}</div>
+                                </div>
                               </div>
-                              <div className="recommendation-content">
-                                <div className="recommendation-title">{rec.title}</div>
-                                <div className="recommendation-detail">{rec.detail}</div>
-                              </div>
-                              <button className="recommendation-action">View</button>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       ) : (
                         <div className="empty-state" style={{ padding: '1rem' }}>
-                          <p>All biomarkers within normal range! 🎉</p>
+                          <p>All biomarkers within normal range!</p>
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
 
-                {/* Biomarker Cards Grid */}
+                {/* Biomarker Cards Grid with Bell Curves */}
                 <div className="biomarker-section-header">
                   <h3 className="section-title">Your Biomarkers</h3>
                 </div>
                 {biomarkers && Object.keys(biomarkers.latest).length > 0 ? (
-                  <>
-                    <div className="biomarker-grid-v2">
-                      {Object.entries(biomarkers.latest).map(([type, data]) => {
-                        const { status, className: statusClass } = getBiomarkerStatus(type, data.value, normalRanges);
-                        const trendValues = getMiniTrend(biomarkers.history, type);
-                        const meta = BIOMARKER_META[type] || {};
-                        return (
-                          <div
-                            key={type}
-                            className="biomarker-card-v2"
-                            onClick={() => setHistoryModal(type)}
-                          >
+                  <div className="biomarker-grid-v2">
+                    {Object.entries(biomarkers.latest).map(([type, data]) => {
+                      const { status, className: statusClass } = getBiomarkerStatus(type, data.value, normalRanges);
+                      const meta = BIOMARKER_META[type] || {};
+                      const BmIcon = meta.IconComponent || IconActivity;
+                      const normalRange = normalRanges.find((r) => r.biomarker_type === type);
+                      return (
+                        <div
+                          key={type}
+                          className="biomarker-card-v2"
+                          onClick={() => setHistoryModal(type)}
+                        >
+                          <div className="bm-card-top">
                             <div className="bm-card-icon" style={{ color: meta.color || '#64748b' }}>
-                              {meta.icon || '📊'}
+                              <BmIcon color={meta.color || '#64748b'} size={18} />
                             </div>
-                            <div className="bm-card-body">
-                              <div className="bm-card-label">{formatBiomarkerName(type)}</div>
-                              <div className="bm-card-value-row">
-                                <span className="bm-card-value">{data.value}</span>
-                                <span className="bm-card-unit">{data.unit}</span>
-                              </div>
-                              <div className="bm-card-bottom">
-                                <span className={`bm-status-badge ${statusClass}`}>{status}</span>
-                                <MiniSparkline values={trendValues} status={statusClass} />
-                              </div>
-                            </div>
+                            <span className={`bm-status-badge ${statusClass}`}>{status}</span>
                           </div>
-                        );
-                      })}
-                    </div>
-
-                    {/* Charts Section */}
-                    <div className="charts-section">
-                      <h3 className="section-title">Health Trends</h3>
-                      <div className="charts-grid">
-                        {Object.entries(biomarkers.history).map(([type, history]) => (
-                          <BiomarkerChart
-                            key={type}
-                            data={history}
-                            type={type}
-                            unit={history[0]?.unit || ""}
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </>
+                          <div className="bm-card-label">{formatBiomarkerName(type)}</div>
+                          <div className="bm-card-value-row">
+                            <span className="bm-card-value">{data.value}</span>
+                            <span className="bm-card-unit">{data.unit}</span>
+                          </div>
+                          <div className="bm-card-curve">
+                            <NormalDistCurve value={data.value} normalRange={normalRange} statusClass={statusClass} />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 ) : (
                   <div className="empty-state">
                     <p>No biomarker data yet. Complete an appointment to see your health readings.</p>
@@ -389,15 +452,15 @@ export default function PatientDashboard() {
                   <h3 className="section-title">Quick Actions</h3>
                   <div className="quick-actions-grid">
                     <button className="quick-action-card" onClick={() => setActiveTab("book")}>
-                      <span className="qa-icon">📅</span>
+                      <span className="qa-icon"><IconCalendar color="#780606" size={22} /></span>
                       <span className="qa-label">Book Appointment</span>
                     </button>
                     <button className="quick-action-card" onClick={() => setActiveTab("appointments")}>
-                      <span className="qa-icon">📋</span>
+                      <span className="qa-icon"><IconClipboard color="#780606" size={22} /></span>
                       <span className="qa-label">View Appointments</span>
                     </button>
                     <button className="quick-action-card" onClick={() => setActiveTab("account")}>
-                      <span className="qa-icon">👤</span>
+                      <span className="qa-icon"><IconUser color="#780606" size={22} /></span>
                       <span className="qa-label">Account Settings</span>
                     </button>
                   </div>
@@ -560,7 +623,7 @@ export default function PatientDashboard() {
         )}
       </main>
 
-      {/* ── BIOMARKER HISTORY MODAL ── */}
+      {/* ── BIOMARKER HISTORY MODAL (Line Chart) ── */}
       {historyModal && biomarkers?.history?.[historyModal] && (
         <div className="modal-overlay" onClick={() => setHistoryModal(null)}>
           <div className="modal history-modal" onClick={(e) => e.stopPropagation()}>
@@ -568,7 +631,7 @@ export default function PatientDashboard() {
               <h3>{formatBiomarkerName(historyModal)} History</h3>
               <button className="modal-close" onClick={() => setHistoryModal(null)}>✕</button>
             </div>
-            <div className="mb-6">
+            <div style={{ marginBottom: '1.5rem' }}>
               <BiomarkerChart
                 data={biomarkers.history[historyModal]}
                 type={historyModal}

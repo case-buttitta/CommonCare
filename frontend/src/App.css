@@ -727,19 +727,19 @@ body {
 
 .biomarker-grid-v2 {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 0.875rem;
 }
 
 @media (min-width: 768px) {
   .biomarker-grid-v2 {
-    grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
   }
 }
 
 @media (min-width: 1200px) {
   .biomarker-grid-v2 {
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 }
 
@@ -752,8 +752,7 @@ body {
   cursor: pointer;
   transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
   display: flex;
-  gap: 0.625rem;
-  align-items: flex-start;
+  flex-direction: column;
 }
 
 .biomarker-card-v2:hover {
@@ -762,16 +761,22 @@ body {
   border-color: var(--primary-light);
 }
 
+.bm-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+
 .bm-card-icon {
-  font-size: 1.5rem;
-  flex-shrink: 0;
-  width: 36px;
-  height: 36px;
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: var(--bg-light);
   border-radius: 10px;
+  flex-shrink: 0;
 }
 
 .bm-card-body {
@@ -807,6 +812,17 @@ body {
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--text-secondary);
+}
+
+.bm-card-curve {
+  margin-top: auto;
+  padding-top: 0.25rem;
+}
+
+.bell-curve-svg {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .bm-card-bottom {
