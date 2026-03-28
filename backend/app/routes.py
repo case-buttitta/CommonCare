@@ -372,9 +372,6 @@ from app.models import NormalRange
 @main.route('/api/normal-ranges', methods=['GET'])
 @token_required
 def get_normal_ranges(current_user):
-    if current_user.user_type != 'staff':
-        return jsonify({'error': 'Staff access required'}), 403
-
     ranges = NormalRange.query.order_by(NormalRange.biomarker_type.asc()).all()
     return jsonify([r.to_dict() for r in ranges])
 

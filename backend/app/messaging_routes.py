@@ -439,6 +439,7 @@ def get_reference_detail(current_user):
             'status': appt.status,
             'reason': appt.reason or '',
             'notes': appt.notes or '',
+            'treatments': appt.treatments or '',
             'biomarkers': biomarkers,
         })
 

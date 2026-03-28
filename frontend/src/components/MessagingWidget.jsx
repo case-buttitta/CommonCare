@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useAuth } from '../AuthContext';
 import { api } from '../api';
 import './MessagingWidget.css';
@@ -37,16 +37,17 @@ export default function MessagingWidget() {
   const [refDetail, setRefDetail] = useState(null);
   const [showRefDetail, setShowRefDetail] = useState(false);
   const [loadingRefDetail, setLoadingRefDetail] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const messageInputRef = useRef(null);
   const pollRef = useRef(null);
 
-  const headers = {
+  const headers = useMemo(() => ({
     'Authorization': `Bearer ${token}`,
     'Content-Type': 'application/json',
-  };
+  }), [token]);
 
   // ── Fetching ────────────────────────────────────────────────────────────
 
@@ -188,8 +189,9 @@ export default function MessagingWidget() {
   };
 
   const sendMessage = async () => {
-    if ((!messageText.trim() && !imagePreview) || !activeConvo) return;
+    if ((!messageText.trim() && !imagePreview) || !activeConvo || isSending) return;
 
+    setIsSending(true);
     const body = {
       content: messageText.trim(),
       message_type: imagePreview ? 'image' : selectedRef ? 'reference' : 'text',
@@ -214,6 +216,8 @@ export default function MessagingWidget() {
       }
     } catch (err) {
       console.error('Failed to send message:', err);
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -894,6 +898,12 @@ export default function MessagingWidget() {
                   <div className="msg-ref-detail-row">
                     <span className="msg-ref-detail-label">Notes</span>
                     <span className="msg-ref-detail-value">{refDetail.notes}</span>
+                  </div>
+                )}
+                {refDetail.treatments && (
+                  <div className="msg-ref-detail-row">
+                    <span className="msg-ref-detail-label">Treatments</span>
+                    <span className="msg-ref-detail-value">{refDetail.treatments}</span>
                   </div>
                 )}
                 {refDetail.biomarkers && refDetail.biomarkers.length > 0 && (
