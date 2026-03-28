@@ -5,52 +5,8 @@ import MedicalHistory from "./components/MedicalHistory";
 import BiomarkerChart from "./components/BiomarkerChart";
 import MessagingWidget from "./components/MessagingWidget";
 
-// ── SVG Icon Components ──────────────────────────────────────────────────────
-const IconHeart = ({ color = "currentColor", size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-  </svg>
-);
-const IconPulse = ({ color = "currentColor", size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-  </svg>
-);
-const IconDroplet = ({ color = "currentColor", size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/>
-  </svg>
-);
-const IconSun = ({ color = "currentColor", size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
-  </svg>
-);
-const IconScale = ({ color = "currentColor", size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M16 3h5v5"/><path d="M8 3H3v5"/><path d="M12 22v-8.5C12 11 14.5 8 17.5 5L21 3"/><path d="M12 13.5C12 11 9.5 8 6.5 5L3 3"/>
-  </svg>
-);
-const IconFlask = ({ color = "currentColor", size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 3h6v7l5 8H4l5-8V3z"/><line x1="9" y1="3" x2="15" y2="3"/>
-  </svg>
-);
-const IconKidney = ({ color = "currentColor", size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M8 2c-3 0-5 2.5-5 6s2 5 4 7c1 1 2 3 2 5h6c0-2 1-4 2-5 2-2 4-3.5 4-7s-2-6-5-6c-2 0-3 1-4 2-1-1-2-2-4-2z"/>
-  </svg>
-);
-const IconBone = ({ color = "currentColor", size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M18.3 5.7a2.5 2.5 0 0 1 0 3.5l-9.1 9.1a2.5 2.5 0 0 1-3.5-3.5l9.1-9.1a2.5 2.5 0 0 1 3.5 0z"/><path d="M5.7 5.7a2.5 2.5 0 0 0 0 3.5"/><path d="M18.3 18.3a2.5 2.5 0 0 0 0-3.5"/>
-  </svg>
-);
-const IconTestTube = ({ color = "currentColor", size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14.5 2v17.5c0 1.4-1.1 2.5-2.5 2.5h0c-1.4 0-2.5-1.1-2.5-2.5V2"/><path d="M8.5 2h7"/><path d="M14.5 16h-5"/>
-  </svg>
-);
+import { BIOMARKER_META, getBiomarkerStatus, NormalDistCurve, IconActivity } from './utils/biomarkerData';
+
 const IconCalendar = ({ color = "currentColor", size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
@@ -66,123 +22,6 @@ const IconUser = ({ color = "currentColor", size = 20 }) => (
     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
   </svg>
 );
-const IconActivity = ({ color = "currentColor", size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
-  </svg>
-);
-const IconCandy = ({ color = "currentColor", size = 20 }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <circle cx="12" cy="12" r="7"/><path d="M12 5V2"/><path d="M12 22v-3"/><path d="M5 12H2"/><path d="M22 12h-3"/><path d="M9 9l5 6"/>
-  </svg>
-);
-
-// Human-readable names and SVG icons for biomarker types
-const BIOMARKER_META = {
-  blood_pressure_systolic:  { label: "Blood Pressure Systolic",  IconComponent: IconHeart,    color: "#e63946" },
-  blood_pressure_diastolic: { label: "Blood Pressure Diastolic", IconComponent: IconHeart,    color: "#e07a7a" },
-  heart_rate:               { label: "Heart Rate",               IconComponent: IconPulse,    color: "#457b9d" },
-  cholesterol_total:        { label: "Cholesterol",              IconComponent: IconDroplet,  color: "#e76f51" },
-  blood_sugar:              { label: "Blood Sugar (Glucose)",    IconComponent: IconCandy,    color: "#f4a261" },
-  vitamin_d:                { label: "Vitamin D",                IconComponent: IconSun,      color: "#e9c46a" },
-  bmi:                      { label: "BMI",                      IconComponent: IconScale,    color: "#2a9d8f" },
-  hba1c:                    { label: "HbA1c",                    IconComponent: IconFlask,    color: "#264653" },
-  kidney_function_egfr:     { label: "Kidney Function (eGFR)",   IconComponent: IconKidney,   color: "#6a994e" },
-  liver_enzymes_alt:        { label: "Liver Enzymes (ALT)",      IconComponent: IconTestTube, color: "#bc6c25" },
-  calcium:                  { label: "Calcium",                  IconComponent: IconBone,     color: "#606c38" },
-  hemoglobin:               { label: "Hemoglobin",               IconComponent: IconDroplet,  color: "#d62828" },
-};
-
-function getBiomarkerStatus(type, value, normalRanges) {
-  const range = normalRanges.find((r) => r.biomarker_type === type);
-  if (!range) return { status: "Unknown", className: "status-unknown" };
-  if (value < range.min_value) return { status: "Low", className: "status-low" };
-  if (value > range.max_value) {
-    const borderline = range.max_value * 1.1;
-    if (value <= borderline) return { status: "Borderline", className: "status-borderline" };
-    return { status: "High", className: "status-high" };
-  }
-  return { status: "Normal", className: "status-normal" };
-}
-
-// ── Normal Distribution Bell Curve ───────────────────────────────────────────
-function NormalDistCurve({ value, normalRange, statusClass }) {
-  if (!normalRange) return null;
-  const { min_value: minVal, max_value: maxVal } = normalRange;
-
-  // Mean = midpoint, sigma chosen so min/max is ~2 sigma from mean
-  const mean = (minVal + maxVal) / 2;
-  const sigma = (maxVal - minVal) / 4;
-
-  // Draw range: mean ± 4 sigma
-  const drawMin = mean - 4 * sigma;
-  const drawMax = mean + 4 * sigma;
-
-  const w = 200;
-  const h = 60;
-  const padY = 6;
-
-  // Gaussian function
-  const gauss = (x) => Math.exp(-0.5 * Math.pow((x - mean) / sigma, 2));
-
-  // Generate curve points
-  const steps = 80;
-  const points = [];
-  for (let i = 0; i <= steps; i++) {
-    const xVal = drawMin + (i / steps) * (drawMax - drawMin);
-    const xPx = (i / steps) * w;
-    const yVal = gauss(xVal);
-    const yPx = h - padY - yVal * (h - 2 * padY);
-    points.push(`${xPx},${yPx}`);
-  }
-
-  // Patient's value position on the curve
-  const clampedVal = Math.max(drawMin, Math.min(drawMax, value));
-  const patientX = ((clampedVal - drawMin) / (drawMax - drawMin)) * w;
-  const patientY = h - padY - gauss(clampedVal) * (h - 2 * padY);
-
-  // Normal range shading region
-  const rangeStartX = ((minVal - drawMin) / (drawMax - drawMin)) * w;
-  const rangeEndX = ((maxVal - drawMin) / (drawMax - drawMin)) * w;
-
-  // Shaded area path under the curve within normal range
-  const shadedPoints = [];
-  for (let i = 0; i <= steps; i++) {
-    const xVal = drawMin + (i / steps) * (drawMax - drawMin);
-    if (xVal < minVal || xVal > maxVal) continue;
-    const xPx = (i / steps) * w;
-    const yVal = gauss(xVal);
-    const yPx = h - padY - yVal * (h - 2 * padY);
-    shadedPoints.push({ x: xPx, y: yPx });
-  }
-  let shadedPath = "";
-  if (shadedPoints.length > 1) {
-    shadedPath = `M ${shadedPoints[0].x},${h - padY} `;
-    shadedPoints.forEach((p) => { shadedPath += `L ${p.x},${p.y} `; });
-    shadedPath += `L ${shadedPoints[shadedPoints.length - 1].x},${h - padY} Z`;
-  }
-
-  const dotColor = statusClass === "status-normal" ? "#16a34a" :
-    statusClass === "status-high" ? "#dc2626" :
-      statusClass === "status-low" ? "#2563eb" :
-        statusClass === "status-borderline" ? "#d97706" : "#94a3b8";
-
-  return (
-    <svg width="100%" height={h} viewBox={`0 0 ${w} ${h}`} preserveAspectRatio="xMidYMid meet" className="bell-curve-svg">
-      {/* Normal range shading */}
-      {shadedPath && <path d={shadedPath} fill="#16a34a" opacity="0.1" />}
-      {/* Range boundary lines */}
-      <line x1={rangeStartX} y1={padY} x2={rangeStartX} y2={h - padY} stroke="#16a34a" strokeWidth="1" strokeDasharray="3 2" opacity="0.4" />
-      <line x1={rangeEndX} y1={padY} x2={rangeEndX} y2={h - padY} stroke="#16a34a" strokeWidth="1" strokeDasharray="3 2" opacity="0.4" />
-      {/* Bell curve */}
-      <polyline points={points.join(" ")} fill="none" stroke="#94a3b8" strokeWidth="1.5" />
-      {/* Patient's value dot */}
-      <circle cx={patientX} cy={patientY} r="5" fill={dotColor} stroke="#fff" strokeWidth="1.5" />
-      {/* Value line down */}
-      <line x1={patientX} y1={patientY + 5} x2={patientX} y2={h - padY} stroke={dotColor} strokeWidth="1" strokeDasharray="2 2" opacity="0.5" />
-    </svg>
-  );
-}
 
 export default function PatientDashboard() {
   const { user, token, logout, deleteAccount, updateUser } = useAuth();
@@ -435,7 +274,7 @@ export default function PatientDashboard() {
                             <span className="bm-card-unit">{data.unit}</span>
                           </div>
                           <div className="bm-card-curve">
-                            <NormalDistCurve value={data.value} normalRange={normalRange} statusClass={statusClass} />
+                            <NormalDistCurve value={data.value} normalRange={normalRange} statusClass={statusClass} type={type} />
                           </div>
                         </div>
                       );
