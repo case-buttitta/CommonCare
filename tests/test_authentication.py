@@ -106,3 +106,51 @@ class TestLoginFlow:
     def test_missing_fields(self, client):
         resp = client.post('/api/auth/login', json={'email': 'x@test.com'})
         assert resp.status_code == 400
+
+class TestAccountManagement:
+    """Account signup, profile modification, and deletion."""
+
+    def test_signup_flow(self, client, db):
+        """POST /api/auth/signup creates a user and returns a token."""
+        resp = client.post('/api/auth/signup', json={
+            'email': 'new@test.com',
+            'password': 'password123',
+            'full_name': 'New User',
+            'user_type': 'patient'
+        })
+        assert resp.status_code == 201
+        data = resp.get_json()
+        assert 'token' in data
+        assert data['user']['email'] == 'new@test.com'
+        assert data['user']['user_type'] == 'patient'
+
+    def test_signup_fails_duplicate_email(self, client, patient):
+        """Signup with an email already in database should fail."""
+        resp = client.post('/api/auth/signup', json={
+            'email': 'patient@test.com',
+            'password': 'password123',
+            'full_name': 'Duplicate',
+            'user_type': 'patient'
+        })
+        assert resp.status_code == 400
+        assert 'already registered' in resp.get_json()['error'].lower()
+
+    def test_profile_modification(self, client, auth_header, patient):
+        """PUT /api/auth/profile updates user details."""
+        resp = client.put('/api/auth/profile', headers=auth_header, json={
+            'full_name': 'John Updated',
+            'address': '456 New St',
+            'location': 'Raleigh'
+        })
+        assert resp.status_code == 200
+        data = resp.get_json()
+        assert data['full_name'] == 'John Updated'
+        assert data['address'] == '456 New St'
+        assert data['location'] == 'Raleigh'
+
+    def test_delete_account(self, client, auth_header, db, patient):
+        """DELETE /api/auth/account removes the user."""
+        resp = client.delete('/api/auth/account', headers=auth_header)
+        assert resp.status_code == 200
+        from app.models import User
+        assert User.query.get(patient.id) is None

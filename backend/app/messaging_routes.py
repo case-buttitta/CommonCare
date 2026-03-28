@@ -30,10 +30,10 @@ def list_conversations(current_user):
 def create_conversation(current_user):
     """Create or get existing conversation. Enforces patient-staff only."""
     data = request.get_json()
-    other_user_id = data.get('user_id')
-
-    if not other_user_id:
+    if not data or 'user_id' not in data:
         return jsonify({'error': 'user_id is required'}), 400
+    
+    other_user_id = data['user_id']
 
     other_user = User.query.get(other_user_id)
     if not other_user:

@@ -56,8 +56,9 @@ def create_app(config_class=Config):
     with app.app_context():
         try:
             db.create_all()
-            _seed_if_needed()
-            _seed_normal_ranges()
+            if not app.testing:
+                _seed_if_needed()
+                _seed_normal_ranges()
         except Exception as e:
             print(f"Warning: db init failed: {e}")
 

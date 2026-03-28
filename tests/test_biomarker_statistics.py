@@ -59,6 +59,19 @@ class TestBiomarkerStatistics:
         data = resp.get_json()
         assert data['status'] == 'completed'
         assert len(data['biomarker_readings']) == 2
+        
+    def test_staff_can_record_treatments(self, client, db, patient, staff, staff_auth_header):
+        """Staff can add recommended treatments to an appointment."""
+        appt = Appointment(patient_id=patient.id, doctor_id=staff.id, appointment_date=datetime.utcnow())
+        db.session.add(appt)
+        db.session.commit()
+
+        resp = client.put(f'/api/appointments/{appt.id}', headers=staff_auth_header, json={
+            'status': 'completed',
+            'treatments': 'Increased water intake, daily 30m walks'
+        })
+        assert resp.status_code == 200
+        assert resp.get_json()['treatments'] == 'Increased water intake, daily 30m walks'
 
     def test_biomarkers_endpoint_returns_latest(self, client, db, patient, staff, auth_header):
         """GET /api/patients/<id>/biomarkers returns latest readings."""

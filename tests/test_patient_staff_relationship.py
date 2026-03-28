@@ -100,3 +100,16 @@ class TestPatientStaffRelationship:
         db.session.commit()
 
         assert Appointment.query.get(appt_id) is None
+
+    def test_patient_can_book_appointment(self, client, auth_header, staff):
+        """POST /api/appointments allows patient to book a slot."""
+        resp = client.post('/api/appointments', headers=auth_header, json={
+            'doctor_id': staff.id,
+            'appointment_date': '2025-12-01T10:00:00',
+            'reason': 'Routine checkup'
+        })
+        assert resp.status_code == 201
+        data = resp.get_json()
+        assert data['doctor_id'] == staff.id
+        assert data['reason'] == 'Routine checkup'
+        assert data['status'] == 'pending'
