@@ -183,7 +183,15 @@ export default function NormalRanges() {
     });
     if (res.ok) {
       const newRange = await res.json();
-      setRanges(prev => [...prev, newRange]);
+      setRanges(prev => {
+        const exists = prev.findIndex(r => r.biomarker_type === newRange.biomarker_type);
+        if (exists >= 0) {
+          const arr = [...prev];
+          arr[exists] = newRange;
+          return arr;
+        }
+        return [...prev, newRange];
+      });
       setForm(emptyForm);
     } else {
       const data = await res.json().catch(() => ({ error: "Unknown error" }));

@@ -47,54 +47,27 @@ The frontend calls the Railway backend directly using the `VITE_API_URL` environ
 
 ## Local Development
 
-### Prerequisites
+The entire local development environment including the database, backend, and frontend is fully containerized. There is no need to install Node/Python locally or decrypt cloud secrets for local development.
 
-- [Docker](https://docs.docker.com/get-docker/) with the Compose plugin
-- [Node.js](https://nodejs.org/) (LTS) for running the frontend locally
-- Access to the encrypted secrets file (`secrets.enc`)
-
-### 1. Decrypt environment variables
-
-```bash
-python manage_secrets.py decrypt
-# Password: 2kiwis
-```
-
-This creates a `.env` file containing the Aiven `DATABASE_URL`.
-
-### 2. Start the backend
+### 1. Start all services
 
 ```bash
 docker compose up --build
 ```
+*(The local database will be automatically seeded with users and historical data on its first boot!)*
 
-The Flask API will be available at **http://localhost:5001**.
+### 2. Access the apps
 
-### 3. Start the frontend
+- **Frontend:** [http://localhost:5174](http://localhost:5174) *(Hot-reloads automatically when you edit React files!)*
+- **Backend API:** [http://localhost:5001](http://localhost:5001)
 
-In a separate terminal:
-
-```bash
-cd frontend
-npm install
-VITE_API_URL=http://localhost:5001 npm run dev
-```
-
-On Windows (PowerShell):
-
-```powershell
-cd frontend
-npm install
-$env:VITE_API_URL="http://localhost:5001"; npm run dev
-```
-
-The frontend will be available at **http://localhost:5173**.
-
-### 4. Stop
+### 3. Stop services
 
 ```bash
 docker compose down
 ```
+
+> **Note:** If you ever need to completely wipe your local database and let it re-seed from scratch, use `docker compose down -v` to delete the volume before starting it up again.
 
 ---
 
@@ -200,7 +173,7 @@ CommonCare/
 
 ## Test Accounts
 
-The Aiven cloud database includes seeded test accounts:
+The local development database (and cloud database) automatically seeds the following test accounts:
 
 | Role    | Email               | Password    |
 |---------|---------------------|-------------|

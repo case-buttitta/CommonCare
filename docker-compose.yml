@@ -1,18 +1,53 @@
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: commoncare-db
+    environment:
+      POSTGRES_USER: commoncare
+      POSTGRES_PASSWORD: commoncare
+      POSTGRES_DB: commoncare
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U commoncare -d commoncare"]
+      interval: 3s
+      timeout: 3s
+      retries: 10
+
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
     container_name: commoncare-backend
-    env_file:
-      - .env
     environment:
-      SECRET_KEY: docker-secret-key
+      DATABASE_URL: postgresql://commoncare:commoncare@db:5432/commoncare
+      SECRET_KEY: local-dev-secret-key
     ports:
       - "5001:5000"
     volumes:
       - ./backend:/app
-    dns:
-      - 8.8.8.8
-      - 8.8.4.4
+    depends_on:
+      db:
+        condition: service_healthy
     restart: on-failure
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    container_name: commoncare-frontend
+    environment:
+      VITE_API_URL: http://localhost:5001
+    ports:
+      - "5174:5173"
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/index.html:/app/index.html
+    depends_on:
+      - backend
+
+volumes:
+  pgdata:

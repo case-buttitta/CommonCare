@@ -5,7 +5,7 @@ import MedicalHistory from "./components/MedicalHistory";
 import BiomarkerChart from "./components/BiomarkerChart";
 import MessagingWidget from "./components/MessagingWidget";
 
-import { BIOMARKER_META, getBiomarkerStatus, NormalDistCurve, IconActivity } from './utils/biomarkerData';
+import { BIOMARKER_META, getBiomarkerStatus, NormalDistCurve, IconActivity, IconHeart, IconSun, IconDroplet, IconScale, IconFlask, IconCandy } from './utils/biomarkerData';
 
 const IconCalendar = ({ color = "currentColor", size = 20 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

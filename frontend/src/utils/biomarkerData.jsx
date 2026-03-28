@@ -58,10 +58,15 @@ export const BIOMARKER_META = {
 export function getBiomarkerStatus(type, value, normalRanges) {
   const range = normalRanges.find((r) => r.biomarker_type === type);
   if (!range) return { status: "Unknown", className: "status-unknown" };
-  if (value < range.min_value) return { status: "Low", className: "status-low" };
-  if (value > range.max_value) {
-    const borderline = range.max_value * 1.1;
-    if (value <= borderline) return { status: "Borderline", className: "status-borderline" };
+  
+  const numValue = Number(value);
+  const minVal = Number(range.min_value);
+  const maxVal = Number(range.max_value);
+
+  if (numValue < minVal) return { status: "Low", className: "status-low" };
+  if (numValue > maxVal) {
+    const borderline = maxVal * 1.1;
+    if (numValue <= borderline) return { status: "Borderline", className: "status-borderline" };
     return { status: "High", className: "status-high" };
   }
   return { status: "Normal", className: "status-normal" };
@@ -72,13 +77,14 @@ export function NormalDistCurve({ value, normalRange, statusClass, type }) {
   const { min_value: minVal, max_value: maxVal } = normalRange;
   
   const meta = BIOMARKER_META[type] || {};
-  let mean = meta.popMean;
-  let sigma = meta.popSigma;
-
-  if (mean === undefined || sigma === undefined) {
-    mean = (minVal + maxVal) / 2;
-    sigma = (maxVal - minVal) / 4;
-  }
+  
+  // As requested, the peak (mean) of the curve is the exact center of the healthy range
+  let mean = (minVal + maxVal) / 2;
+  // Standard deviation is scaled to the healthy range's width (covers 4 sigmas of the healthy zone)
+  const sigma = (maxVal - minVal) / 4 || 1; 
+  
+  // Protect log-normal math from NaN issues if the user sets min/max ranges around or below zero
+  if (meta.rightSkew && mean <= 0) mean = 0.1;
   
   // Decide drawing bounds to include the curve peak/tails AND the min/max limits AND the patient value
   let drawMin = Math.min(mean - 3.5 * sigma, minVal - sigma, value - sigma);

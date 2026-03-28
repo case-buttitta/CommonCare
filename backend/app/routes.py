@@ -389,6 +389,16 @@ def create_normal_range(current_user):
         if field not in data:
             return jsonify({'error': f'{field} is required'}), 400
 
+    # Check if a range for this biomarker already exists (Upsert logic)
+    existing_range = NormalRange.query.filter_by(biomarker_type=data['biomarker_type']).first()
+    
+    if existing_range:
+        existing_range.min_value = data['min_value']
+        existing_range.max_value = data['max_value']
+        existing_range.unit = data['unit']
+        db.session.commit()
+        return jsonify(existing_range.to_dict()), 200
+
     new_range = NormalRange(
         biomarker_type=data['biomarker_type'],
         min_value=data['min_value'],

@@ -7,6 +7,7 @@ db = SQLAlchemy()
 ALLOWED_ORIGINS = [
     "https://case-buttitta.github.io",
     "http://localhost:5173",
+    "http://localhost:5174",
     "http://localhost:5001",
 ]
 
@@ -69,8 +70,14 @@ def _seed_if_needed():
                             Conversation, Message)
     from datetime import datetime, timedelta
 
-    if User.query.filter_by(email="patient@test.com").first():
-        print("✓ Database already seeded, skipping.")
+    from sqlalchemy.exc import IntegrityError
+    
+    try:
+        if User.query.filter_by(email="patient@test.com").first():
+            print("✓ Database already seeded, skipping.")
+            return
+    except Exception:
+        db.session.rollback()
         return
 
     print("Seeding database...")
@@ -250,15 +257,25 @@ def _seed_if_needed():
             created_at=msg_data["time"],
         ))
 
-    db.session.commit()
-    print("✓ Seed data created: patient@test.com / doctor@test.com / doctor2@test.com (password123)")
+    try:
+        db.session.commit()
+        print("✓ Seed data created: patient@test.com / doctor@test.com / doctor2@test.com (password123)")
+    except IntegrityError:
+        db.session.rollback()
+        print("✓ Concurrent seed detected. Rolled back gracefully.")
 
 
 def _seed_normal_ranges():
     """Seed default normal ranges if none exist yet."""
     from app.models import NormalRange
 
-    if NormalRange.query.first():
+    from sqlalchemy.exc import IntegrityError
+
+    try:
+        if NormalRange.query.first():
+            return
+    except Exception:
+        db.session.rollback()
         return
 
     defaults = [
@@ -292,6 +309,10 @@ def _seed_normal_ranges():
             unit=unit
         ))
 
-    db.session.commit()
-    print("✓ Default normal ranges seeded.")
+    try:
+        db.session.commit()
+        print("✓ Default normal ranges seeded.")
+    except IntegrityError:
+        db.session.rollback()
+        print("✓ Concurrent normal ranges seed detected. Rolled back gracefully.")
 
