@@ -719,6 +719,29 @@ body {
   box-shadow: 0 2px 8px rgba(120, 6, 6, 0.3);
 }
 
+.recommendations-toggle {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid #eee;
+}
+
+.recommendations-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: #f8f9fb;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.recommendations-body {
+  padding: 1rem;
+  background: #fff;
+}
+
 .biomarker-section-header {
   display: flex;
   align-items: center;

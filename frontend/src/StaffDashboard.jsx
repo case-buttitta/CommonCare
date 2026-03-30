@@ -7,6 +7,7 @@ import NormalRanges from "./components/NormalRanges";
 import MessagingWidget from './components/MessagingWidget';
 
 import { BIOMARKER_META, getBiomarkerStatus, NormalDistCurve, IconActivity } from './utils/biomarkerData';
+import { IconHeart, IconSun, IconDroplet, IconScale, IconFlask, IconCandy } from './utils/biomarkerData';
 
 export default function StaffDashboard() {
     const { user, token, logout, deleteAccount, updateUser } = useAuth();
@@ -22,6 +23,7 @@ export default function StaffDashboard() {
     const [allAppointments, setAllAppointments] = useState([]);
     const [selectedAppointment, setSelectedAppointment] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [showRecommendations, setShowRecommendations] = useState(false);
 
     const [formBiomarkers, setFormBiomarkers] = useState([]);
     const [formNotes, setFormNotes] = useState('');
@@ -164,6 +166,38 @@ export default function StaffDashboard() {
         return BIOMARKER_META[type]?.label || type.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
     };
 
+    const getRecommendations = () => {
+    if (!patientBiomarkers?.latest || normalRanges.length === 0) return [];
+
+    const recs = [];
+    const latest = patientBiomarkers.latest;
+
+    const checks = [
+        { key: "blood_pressure_systolic", title: "Reduce Blood Pressure", detail: "Continue medication + 30 min exercise, 5x/week", IconComponent: IconHeart, color: "#e63946"},
+        { key: "vitamin_d", title: "Vitamin D Deficiency", detail: "Take 2000 IU daily + Repeat test in 3 months", IconComponent: IconSun, color: "#e9c46a"},
+        { key: "cholesterol_total", title: "High Cholesterol", detail: "Diet: Low fat, high fiber + Recheck in 2 months", IconComponent: IconDroplet, color: "#e76f51"},
+        { key: "bmi", title: "Weight Management", detail: "Target BMI < 25 + Diet and exercise plan", IconComponent: IconScale, color: "#2a9d8f"},
+        { key: "hba1c", title: "Blood Sugar Monitoring", detail: "HbA1c elevated + Monitor carb intake", IconComponent: IconFlask, color: "#264653"},
+        { key: "blood_sugar", title: "Blood Glucose Elevated", detail: "Monitor fasting glucose + Dietary adjustments", IconComponent: IconCandy, color: "#f4a261"},
+    ];
+
+    for (const chk of checks) {
+        if (latest[chk.key]) {
+            const { status } = getBiomarkerStatus(
+                chk.key,
+                latest[chk.key].value,
+                normalRanges
+            );
+
+            if (status !== "Normal") {
+                recs.push(chk);
+            }
+        }
+    }
+
+    return recs;
+};
+
     const pendingAppointments = allAppointments.filter(a => a.status === 'pending');
     const completedAppointments = allAppointments.filter(a => a.status === 'completed');
 
@@ -239,6 +273,44 @@ export default function StaffDashboard() {
                                                 <div className="mb-6">
                                                     <MedicalHistory patientId={selectedPatient.id} userType="staff" />
                                                 </div>
+
+                                        {/* ── Recommended Treatments Toggle ── */}
+                                            <div className="recommendations-toggle">
+                                                <div
+                                                    className="recommendations-header"
+                                                    onClick={() => setShowRecommendations(prev => !prev)}
+                                                >
+                                                    <h4>Recommended Treatments</h4>
+                                                    <span>{showRecommendations ? "▲" : "▼"}</span>
+                                                </div>
+
+                                        {showRecommendations && (
+                                            <div className="recommendations-body">
+                                                {getRecommendations().length > 0 ? (
+                                                    <div className="recommendations-list">
+                                                        {getRecommendations().map((rec, i) => (
+                                                            <div key={i} className="recommendation-item">
+                                                                <div
+                                                                    className="recommendation-icon"
+                                                                    style={{ background: rec.color + "20", color: rec.color }}
+                                                                >
+                                                                    <rec.IconComponent color={rec.color} size={16} />
+                                                                </div>
+                                                                <div className="recommendation-content">
+                                                                    <div className="recommendation-title">{rec.title}</div>
+                                                                    <div className="recommendation-detail">{rec.detail}</div>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="empty-state">
+                                                            <p>All biomarkers within normal range!</p>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
 
                                                 {/* Biomarkers - v2 cards with bell curves */}
                                                 <h4 className="subsection-title">Biomarkers</h4>
