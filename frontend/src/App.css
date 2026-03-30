@@ -669,6 +669,7 @@ body {
 .recommendation-item:hover {
   transform: translateY(-1px);
   box-shadow: var(--shadow);
+  cursor: pointer;
 }
 
 .recommendation-icon {

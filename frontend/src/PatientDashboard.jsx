@@ -45,6 +45,7 @@ export default function PatientDashboard() {
   const [editingProfile, setEditingProfile] = useState(false);
   const [profileForm, setProfileForm] = useState({ full_name: '', address: '', location: '' });
   const [profileSaving, setProfileSaving] = useState(false);
+  const [treatmentModal, setTreatmentModal] = useState(null);
 
   const [toast, setToast] = useState(null);
   const showToast = (message, type = "error") => {
@@ -223,8 +224,23 @@ export default function PatientDashboard() {
                         <div className="recommendations-list">
                           {getRecommendations().map((rec, i) => {
                             const RecIcon = rec.IconComponent;
+                            const history = biomarkers.history?.[rec.key];
+                            const latestEntry = history?.[history.length - 1];
+
+                            const modalData = {
+                              title: rec.title,
+                              biomarker: formatBiomarkerName(rec.key),
+                              doctor: latestEntry?.doctor_name || "Not Applicable",
+                              date: latestEntry ? new Date(latestEntry.date).toLocaleDateString() : "Not Applicable",
+                              note: rec.detail,
+                              IconComponent: rec.IconComponent,
+                              color: rec.color
+                            };
+
                             return (
-                              <div key={i} className="recommendation-item">
+                              <div key={i} className="recommendation-item"
+                              onClick={() => setTreatmentModal(modalData)}
+                              >
                                 <div className="recommendation-icon" style={{ background: rec.color + '20', color: rec.color }}>
                                   <RecIcon color={rec.color} size={18} />
                                 </div>
@@ -514,6 +530,65 @@ export default function PatientDashboard() {
           </div>
         </div>
       )}
+
+      {/* ── TREATMENT MODAL ── */}
+{treatmentModal && (
+  <div className="modal-overlay" onClick={() => setTreatmentModal(null)}>
+    <div className="modal" onClick={(e) => e.stopPropagation()}>
+      
+      {/* ── Modal Header ── */}
+      <div className="modal-header">
+        <h3>{treatmentModal.title}</h3>
+        <button className="modal-close" onClick={() => setTreatmentModal(null)}>✕</button>
+      </div>
+
+      {/* ── Modal Body ── */}
+      <div
+        className="modal-body"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '1rem',
+          alignItems: 'center',
+          marginBottom: '1.5rem'
+        }}
+      >
+        {/* Icon with circular background */}
+        {treatmentModal.IconComponent && (
+          <div
+            style={{
+              width: '60px',
+              height: '60px',
+              borderRadius: '50%',
+              backgroundColor: treatmentModal.color + '20',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              boxShadow: '0 2px 6px rgba(0,0,0,0.15)'
+            }}
+          >
+            <treatmentModal.IconComponent color={treatmentModal.color} size={32} />
+          </div>
+        )}
+
+        {/* Text Details */}
+        <div style={{ flex: 1 }}>
+          <p><strong>Biomarker:</strong> {treatmentModal.biomarker}</p>
+          <p><strong>Current Doctor:</strong> {treatmentModal.doctor}</p>
+          <p><strong>Latest Appointment:</strong> {treatmentModal.date}</p>
+          <p><strong>Note:</strong> {treatmentModal.note}</p>
+        </div>
+          <div className="modal-warning" 
+          style={{fontSize: '0.6rem'}}>
+            ⚠️ Please Consult with your doctor before starting new medications or making major lifestyle changes.
+          </div>
+      </div>
+
+    </div>
+  </div>
+)}
+
       <MessagingWidget />
       {toast && (
         <div className={`toast ${toast.type}`}>{toast.message}</div>
