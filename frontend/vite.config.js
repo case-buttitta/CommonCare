@@ -8,6 +8,16 @@ const commitSha = (process.env.RAILWAY_GIT_COMMIT_SHA || process.env.GITHUB_SHA 
 
 // https://vite.dev/config/
 export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: ['./src/test/setup.js'],
+    css: false,
+    define: {
+      __APP_VERSION__: JSON.stringify('test'),
+      __BUILD_SHA__: JSON.stringify('test'),
+    },
+  },
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
     __BUILD_SHA__: JSON.stringify(commitSha || 'local'),
