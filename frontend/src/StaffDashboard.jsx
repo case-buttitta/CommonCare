@@ -339,7 +339,7 @@ export default function StaffDashboard() {
                                                                     </div>
                                                                     <button
                                                                         className="btn-secondary"
-                                                                        style={{ width: '100%', marginTop: '0.5rem', padding: '0.3rem 0', fontSize: '0.8rem' }}
+                                                                        style={{ width: '100%', marginTop: '0.5rem', padding: '0.3rem 0', fontSize: '0.8rem', textDecoration: 'none' }}
                                                                         onClick={e => { e.stopPropagation(); setHistoryModal(type); }}
                                                                     >
                                                                         Details
@@ -610,6 +610,9 @@ export default function StaffDashboard() {
 
             <MessagingWidget />
             {profileToast && (<div className={`toast ${profileToast.type}`}>{profileToast.message}</div>)}
+            <div style={{ textAlign: 'center', padding: '0.75rem', fontSize: '0.75rem', color: '#780606', opacity: 0.7 }}>
+                version {__APP_VERSION__}-{__BUILD_SHA__}
+            </div>
         </div>
     );
 }

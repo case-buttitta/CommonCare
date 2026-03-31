@@ -232,7 +232,7 @@ const MedicalHistory = ({ patientId, userType }) => {
                 <div className="actions">
                   <button
                     onClick={() => handleEdit(record)}
-                    className="btn-secondary"
+                    style={{ background: '#2563eb', color: '#fff', fontWeight: 700, border: 'none', borderRadius: '6px', padding: '0.3rem 0.8rem', fontSize: '0.8rem', cursor: 'pointer' }}
                   >
                     Edit
                   </button>
@@ -241,7 +241,7 @@ const MedicalHistory = ({ patientId, userType }) => {
                       setDeleteId(record.id);
                       setShowConfirm(true);
                     }}
-                    className="btn-danger"
+                    style={{ background: '#c0392b', color: '#fff', fontWeight: 700, border: 'none', borderRadius: '6px', padding: '0.3rem 0.8rem', fontSize: '0.8rem', cursor: 'pointer' }}
                   >
                     Delete
                   </button>
