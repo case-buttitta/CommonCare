@@ -67,6 +67,7 @@ class Appointment(db.Model):
     reason = db.Column(db.String(500))
     notes = db.Column(db.Text)
     treatments = db.Column(db.Text)
+    reminder_sent = db.Column(db.Boolean, default=False, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # Relationship to biomarker readings
@@ -96,6 +97,7 @@ class Appointment(db.Model):
             'reason': self.reason,
             'notes': self.notes,
             'treatments': self.treatments,
+            'reminder_sent': self.reminder_sent,
             'created_at': self.created_at.isoformat(),
             'biomarker_readings': [r.to_dict() for r in self.biomarker_readings]
         }

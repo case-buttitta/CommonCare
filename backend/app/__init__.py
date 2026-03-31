@@ -53,6 +53,15 @@ def create_app(config_class=Config):
     from app.api_history import blp as history_blp
     api.register_blueprint(history_blp)
 
+    # Initialize APScheduler
+    from apscheduler.schedulers.background import BackgroundScheduler
+    from app.tasks import send_appointment_reminders
+    
+    scheduler = BackgroundScheduler()
+    # Check for reminders every minute
+    scheduler.add_job(func=send_appointment_reminders, args=[app], trigger="interval", minutes=1)
+    scheduler.start()
+
     with app.app_context():
         try:
             db.create_all()
