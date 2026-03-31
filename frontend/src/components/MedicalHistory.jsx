@@ -232,7 +232,7 @@ const MedicalHistory = ({ patientId, userType }) => {
                 <div className="actions">
                   <button
                     onClick={() => handleEdit(record)}
-                    className="link-btn"
+                    className="btn-secondary"
                   >
                     Edit
                   </button>
@@ -241,7 +241,7 @@ const MedicalHistory = ({ patientId, userType }) => {
                       setDeleteId(record.id);
                       setShowConfirm(true);
                     }}
-                    className="link-btn danger"
+                    className="btn-danger"
                   >
                     Delete
                   </button>

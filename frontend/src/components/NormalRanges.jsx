@@ -224,22 +224,20 @@ export default function NormalRanges() {
           </h4>
           {!editingId && (
             <div style={{ display: "flex", gap: "0.5rem" }}>
-              <button
-                type="button"
-                className={formMode === "standard" ? "auth-button" : "btn-secondary"}
-                style={{ width: "auto", padding: "0.35rem 0.9rem", fontSize: "0.85rem" }}
-                onClick={() => switchMode("standard")}
-              >
-                Standard
-              </button>
-              <button
-                type="button"
-                className={formMode === "custom" ? "auth-button" : "btn-secondary"}
-                style={{ width: "auto", padding: "0.35rem 0.9rem", fontSize: "0.85rem" }}
-                onClick={() => switchMode("custom")}
-              >
-                Custom
-              </button>
+              {["standard", "custom"].map(mode => (
+                <button
+                  key={mode}
+                  type="button"
+                  className={formMode === mode ? "auth-button" : undefined}
+                  style={formMode === mode
+                    ? { width: "auto", padding: "0.35rem 0.9rem", fontSize: "0.85rem" }
+                    : { width: "auto", padding: "0.35rem 0.9rem", fontSize: "0.85rem", background: "transparent", border: "1.5px solid #780606", color: "#780606", borderRadius: "6px", cursor: "pointer", fontWeight: 500 }
+                  }
+                  onClick={() => switchMode(mode)}
+                >
+                  {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                </button>
+              ))}
             </div>
           )}
         </div>

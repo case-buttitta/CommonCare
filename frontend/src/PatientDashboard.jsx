@@ -292,6 +292,13 @@ export default function PatientDashboard() {
                           <div className="bm-card-curve">
                             <NormalDistCurve value={data.value} normalRange={normalRange} statusClass={statusClass} type={type} />
                           </div>
+                          <button
+                            className="btn-secondary"
+                            style={{ width: '100%', marginTop: '0.5rem', padding: '0.3rem 0', fontSize: '0.8rem' }}
+                            onClick={e => { e.stopPropagation(); setHistoryModal(type); }}
+                          >
+                            Details
+                          </button>
                         </div>
                       );
                     })}
