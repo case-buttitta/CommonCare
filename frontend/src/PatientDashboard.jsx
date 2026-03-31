@@ -600,7 +600,7 @@ export default function PatientDashboard() {
       {toast && (
         <div className={`toast ${toast.type}`}>{toast.message}</div>
       )}
-      <div style={{ textAlign: 'center', padding: '0.75rem', fontSize: '0.75rem', color: '#780606', opacity: 0.7 }}>
+      <div style={{ textAlign: 'center', padding: '0.75rem', fontSize: '0.82rem', fontWeight: 600, color: '#780606', opacity: 0.75 }}>
         version {__APP_VERSION__}-{__BUILD_SHA__}
       </div>
     </div>

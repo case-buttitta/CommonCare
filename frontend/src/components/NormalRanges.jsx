@@ -231,7 +231,7 @@ export default function NormalRanges() {
                   className={formMode === mode ? "auth-button" : undefined}
                   style={formMode === mode
                     ? { width: "auto", padding: "0.35rem 0.9rem", fontSize: "0.85rem" }
-                    : { width: "auto", padding: "0.35rem 0.9rem", fontSize: "0.85rem", background: "#6c757d", border: "none", color: "#fff", borderRadius: "6px", cursor: "pointer", fontWeight: 600 }
+                    : { width: "auto", padding: "0.35rem 0.9rem", fontSize: "0.85rem", background: "linear-gradient(135deg, #9ca3af 0%, #cbd5e1 100%)", border: "none", color: "#fff", borderRadius: "10px", cursor: "pointer", fontWeight: 600, transition: "opacity 0.2s" }
                   }
                   onClick={() => switchMode(mode)}
                 >

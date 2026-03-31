@@ -229,10 +229,10 @@ const MedicalHistory = ({ patientId, userType }) => {
               </div>
 
               {userType === "staff" && (
-                <div className="actions">
+                <div className="actions" style={{ alignSelf: 'flex-start' }}>
                   <button
                     onClick={() => handleEdit(record)}
-                    style={{ background: '#2563eb', color: '#fff', fontWeight: 700, border: 'none', borderRadius: '6px', padding: '0.3rem 0.8rem', fontSize: '0.8rem', cursor: 'pointer' }}
+                    style={{ background: 'linear-gradient(135deg, #1d4ed8 0%, #5b9af5 100%)', color: '#fff', fontWeight: 700, border: 'none', borderRadius: '8px', padding: '0.3rem 0.8rem', fontSize: '0.8rem', cursor: 'pointer' }}
                   >
                     Edit
                   </button>
@@ -241,7 +241,7 @@ const MedicalHistory = ({ patientId, userType }) => {
                       setDeleteId(record.id);
                       setShowConfirm(true);
                     }}
-                    style={{ background: '#c0392b', color: '#fff', fontWeight: 700, border: 'none', borderRadius: '6px', padding: '0.3rem 0.8rem', fontSize: '0.8rem', cursor: 'pointer' }}
+                    style={{ background: 'linear-gradient(135deg, #991b1b 0%, #e05252 100%)', color: '#fff', fontWeight: 700, border: 'none', borderRadius: '8px', padding: '0.3rem 0.8rem', fontSize: '0.8rem', cursor: 'pointer' }}
                   >
                     Delete
                   </button>
