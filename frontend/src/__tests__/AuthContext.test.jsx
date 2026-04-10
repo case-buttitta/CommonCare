@@ -63,6 +63,11 @@ describe('AuthProvider', () => {
       ok: true,
       json: async () => ({ token: 'new-token', user: { id: 2, email: 'u@test.com' } }),
     });
+    // useEffect will call fetchUser when token changes
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ id: 2, email: 'u@test.com' }),
+    });
 
     let ctx;
     renderWithAuth((v) => { ctx = v; });
@@ -110,6 +115,11 @@ describe('AuthProvider', () => {
     fetch.mockResolvedValueOnce({
       ok: true,
       json: async () => ({ token: 'signup-tok', user: { id: 3, email: 'new@test.com' } }),
+    });
+    // useEffect will call fetchUser when token changes
+    fetch.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({ id: 3, email: 'new@test.com' }),
     });
 
     let ctx;

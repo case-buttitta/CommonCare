@@ -525,7 +525,10 @@ def get_unread_count(current_user):
         convo_ids = [c.id for c in Conversation.query.filter_by(staff_id=current_user.id).all()]
 
     if not convo_ids:
-        return jsonify({'unread_count': 0})
+        pending_requests = MessageRequest.query.filter_by(
+            to_user_id=current_user.id, status='pending'
+        ).count()
+        return jsonify({'unread_count': 0, 'pending_requests': pending_requests})
 
     count = Message.query.filter(
         Message.conversation_id.in_(convo_ids),
