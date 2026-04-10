@@ -25,6 +25,7 @@ services:
     environment:
       DATABASE_URL: postgresql://commoncare:commoncare@db:5432/commoncare
       SECRET_KEY: local-dev-secret-key
+      OPEN_API_KEY: ${OPEN_API_KEY:-}
     ports:
       - "5001:5000"
     volumes:

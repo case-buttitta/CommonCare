@@ -49,6 +49,9 @@ def create_app(config_class=Config):
 
     from app.messaging_routes import messaging
     app.register_blueprint(messaging)
+
+    from app.ai_chat_routes import ai_chat
+    app.register_blueprint(ai_chat)
     
     from app.api_history import blp as history_blp
     api.register_blueprint(history_blp)

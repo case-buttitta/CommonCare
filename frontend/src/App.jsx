@@ -5,6 +5,7 @@ import Signup from './Signup'
 import PatientDashboard from './PatientDashboard'
 import StaffDashboard from './StaffDashboard'
 import ErrorBoundary from "./ErrorBoundary/ErrorBoundary";
+import AIChatWidget from "./components/AIChatWidget";
 import './App.css'
 
 function AppContent() {
@@ -28,10 +29,20 @@ function AppContent() {
   }
 
   if (user.user_type === 'staff') {
-    return <StaffDashboard />;
+    return (
+      <>
+        <StaffDashboard />
+        <AIChatWidget />
+      </>
+    );
   }
 
-  return <PatientDashboard />;
+  return (
+    <>
+      <PatientDashboard />
+      <AIChatWidget />
+    </>
+  );
 }
 
 function App() {

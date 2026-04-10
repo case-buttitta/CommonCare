@@ -107,7 +107,32 @@ jobs:
           path: frontend/dist
 
 # ──────────────────────────────────────────────────────────────────────────────
-# JOB 4: Deploy — only runs after a successful build
+# JOB 4: Deploy to Railway — sets OPEN_API_KEY from GitHub secret
+# ──────────────────────────────────────────────────────────────────────────────
+  deploy-railway:
+    name: Deploy Backend to Railway
+    needs: [test-backend, test-frontend]
+    # Skip on pull requests
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Set OPEN_API_KEY environment variable in Railway
+        run: railway variables set OPEN_API_KEY="${{ secrets.OPEN_API_KEY }}"
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+      - name: Trigger Railway deployment
+        run: railway up --service backend
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+
+# ──────────────────────────────────────────────────────────────────────────────
+# JOB 5: Deploy to GitHub Pages — only runs after a successful build
 # ──────────────────────────────────────────────────────────────────────────────
   deploy:
     name: Deploy to GitHub Pages
