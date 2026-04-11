@@ -118,18 +118,48 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install Railway CLI
-        run: npm install -g @railway/cli
+      - name: Set OPEN_API_KEY in Railway via API
+        run: |
+          PROJECT_ID=${{ secrets.RAILWAY_PROJECT_ID }}
+          SERVICE_ID=${{ secrets.RAILWAY_SERVICE_ID }}
+          API_KEY="${{ secrets.RAILWAY_TOKEN }}"
 
-      - name: Set OPEN_API_KEY environment variable in Railway
-        run: railway variables set OPEN_API_KEY="${{ secrets.OPEN_API_KEY }}"
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+          # Get all variables
+          VARS=$(curl -s -X GET \
+            -H "Authorization: Bearer $API_KEY" \
+            -H "Content-Type: application/json" \
+            "https://backboard.railway.app/v2/projects/$PROJECT_ID/services/$SERVICE_ID/variables")
+
+          # Check if OPEN_API_KEY already exists
+          if echo "$VARS" | grep -q '"name":"OPEN_API_KEY"'; then
+            # Update existing variable
+            VAR_ID=$(echo "$VARS" | grep -o '"id":"[^"]*"' | grep -A1 '"name":"OPEN_API_KEY"' | tail -1 | cut -d'"' -f4)
+            curl -s -X PATCH \
+              -H "Authorization: Bearer $API_KEY" \
+              -H "Content-Type: application/json" \
+              -d '{"value":"${{ secrets.OPEN_API_KEY }}"}' \
+              "https://backboard.railway.app/v2/projects/$PROJECT_ID/services/$SERVICE_ID/variables/$VAR_ID"
+            echo "Updated OPEN_API_KEY"
+          else
+            # Create new variable
+            curl -s -X POST \
+              -H "Authorization: Bearer $API_KEY" \
+              -H "Content-Type: application/json" \
+              -d '{"name":"OPEN_API_KEY","value":"${{ secrets.OPEN_API_KEY }}"}' \
+              "https://backboard.railway.app/v2/projects/$PROJECT_ID/services/$SERVICE_ID/variables"
+            echo "Created OPEN_API_KEY"
+          fi
 
       - name: Trigger Railway deployment
-        run: railway up --service backend
-        env:
-          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          PROJECT_ID=${{ secrets.RAILWAY_PROJECT_ID }}
+          SERVICE_ID=${{ secrets.RAILWAY_SERVICE_ID }}
+          API_KEY="${{ secrets.RAILWAY_TOKEN }}"
+
+          curl -s -X POST \
+            -H "Authorization: Bearer $API_KEY" \
+            -H "Content-Type: application/json" \
+            "https://backboard.railway.app/v2/projects/$PROJECT_ID/services/$SERVICE_ID/deploy"
 
 # ──────────────────────────────────────────────────────────────────────────────
 # JOB 5: Deploy to GitHub Pages — only runs after a successful build
