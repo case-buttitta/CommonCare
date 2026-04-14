@@ -9,54 +9,46 @@ ai_chat = Blueprint('ai_chat', __name__)
 
 OPENAI_API_KEY = os.environ.get('OPEN_API_KEY', '')
 
-# Topics the AI is allowed to discuss
-ALLOWED_TOPICS = [
-    'biomarker', 'blood pressure', 'heart rate', 'cholesterol', 'blood sugar',
-    'vitamin', 'bmi', 'hba1c', 'kidney', 'liver', 'calcium', 'hemoglobin',
-    'oxygen', 'temperature', 'respiratory', 'triglycerides', 'weight', 'height',
-    'appointment', 'treatment', 'medication', 'medical history', 'condition',
-    'diagnosis', 'health', 'doctor', 'nurse', 'staff', 'prescription',
-    'symptom', 'side effect', 'dosage', 'diet', 'exercise', 'wellness',
-    'normal range', 'test result', 'lab', 'reading', 'trend', 'recommendation',
-    'pulse', 'vital', 'checkup', 'follow-up', 'schedule', 'remind',
-    'hello', 'hi', 'hey', 'help', 'thank', 'explain', 'what', 'how', 'why',
-    'summary', 'overview', 'understand', 'mean', 'concern', 'worried',
-    'disease', 'disorder', 'therapy', 'prevention', 'risk', 'cause',
-    'manage', 'improve', 'lower', 'reduce', 'increase', 'level',
-    'food', 'nutrition', 'sleep', 'stress', 'anxiety', 'mental',
-    'pain', 'headache', 'fatigue', 'allergy', 'infection', 'inflammation',
-    'sugar', 'sodium', 'protein', 'fiber', 'carb', 'fat',
-    'stroke', 'diabetes', 'asthma', 'arthritis', 'cancer', 'anemia',
-    'hypertension', 'obesity', 'insulin', 'immune', 'vaccine', 'surgery',
-]
+CLASSIFIER_PROMPT = """You are a message classifier for a healthcare app called CommonCare. Your job is to decide if a patient's message should be answered by the health assistant.
 
-# Phrases that indicate a request for other patients' data
-PRIVACY_PATTERNS = [
-    r"\bother\s+patient",
-    r"\bsomeone\s*else",
-    r"\banother\s+patient",
-    r"\bother\s+people",
-    r"\beveryone\s*(?:'s|s)?\s+(?:data|record|condition|history|info)",
-    r"\ball\s+patient",
-    r"\bother\s+user",
-    r"\banother\s+person",
-    r"\btheir\s+(?:data|medical|health|record|condition)",
-]
+Classify the message into exactly ONE category:
+
+- "allowed" — The message is related to health, medicine, wellness, biomarkers, appointments, treatments, medical conditions, diet, exercise, mental health, general health education, or is a greeting/follow-up. Be GENEROUS here — if there is any reasonable health connection, allow it.
+- "privacy" — The message is asking to see OTHER patients' data, someone else's medical records, or information about other users. Do NOT flag messages that simply ask about the patient's own data.
+- "off_topic" — The message is clearly unrelated to health (e.g. politics, sports scores, coding, movies, math homework, etc.)
+
+Respond with ONLY a JSON object, no other text:
+{"verdict": "allowed"|"privacy"|"off_topic", "reason": "brief explanation"}"""
 
 
-def _check_privacy(message):
-    """Check if the message is requesting access to other patients' data."""
-    msg_lower = message.lower().strip()
-    return any(re.search(p, msg_lower) for p in PRIVACY_PATTERNS)
+def _classify_message(message):
+    """Use a lightweight AI call to classify message relevancy and privacy.
+    Returns a dict with 'verdict' ('allowed', 'privacy', 'off_topic') and 'reason'.
+    Falls back to 'allowed' if no API key or on error (fail-open)."""
+    if not OPENAI_API_KEY:
+        return {'verdict': 'allowed', 'reason': ''}
 
-
-def _is_relevant(message):
-    """Check if the user message is health/medical related or a greeting."""
-    msg_lower = message.lower().strip()
-    # Allow short messages (likely greetings or follow-ups)
-    if len(msg_lower) < 15:
-        return True
-    return any(topic in msg_lower for topic in ALLOWED_TOPICS)
+    try:
+        import openai, json
+        client = openai.OpenAI(api_key=OPENAI_API_KEY)
+        completion = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {"role": "system", "content": CLASSIFIER_PROMPT},
+                {"role": "user", "content": message},
+            ],
+            max_tokens=80,
+            temperature=0,
+        )
+        raw = completion.choices[0].message.content.strip()
+        # Parse the JSON response
+        result = json.loads(raw)
+        if result.get('verdict') in ('allowed', 'privacy', 'off_topic'):
+            return result
+        return {'verdict': 'allowed', 'reason': ''}
+    except Exception as e:
+        print(f"Classifier error (failing open): {e}")
+        return {'verdict': 'allowed', 'reason': ''}
 
 
 def _gather_patient_context(patient_id):
@@ -180,18 +172,17 @@ def chat_with_ai(current_user):
     if not user_message:
         return jsonify({'error': 'Message cannot be empty'}), 400
 
-    # Check for privacy violations first
-    if _check_privacy(user_message):
+    # AI-powered message classification (privacy + relevance in one call)
+    classification = _classify_message(user_message)
+    if classification['verdict'] == 'privacy':
         return jsonify({
             'response': "I'm sorry, but I can only access **your** health data. For privacy and security reasons, I cannot share information about other patients. This protects everyone's medical records, including yours.\n\nIs there anything about **your** health data I can help with?",
             'filtered': True,
             'reason': 'privacy'
         })
-
-    # Check relevance
-    if not _is_relevant(user_message):
+    if classification['verdict'] == 'off_topic':
         return jsonify({
-            'response': "That topic doesn't seem to be related to health or your medical data. I'm designed to help specifically with health-related questions — including your biomarkers, appointments, treatments, medical conditions, and general health education.\n\nCould you ask me something related to your health?",
+            'response': f"That topic doesn't seem to be related to health or your medical data. I'm designed to help specifically with health-related questions — including your biomarkers, appointments, treatments, medical conditions, and general health education.\n\nCould you ask me something related to your health?",
             'filtered': True,
             'reason': 'off_topic'
         })
