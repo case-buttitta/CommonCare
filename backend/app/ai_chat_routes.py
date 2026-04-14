@@ -1,5 +1,6 @@
 import os
 import re
+from datetime import datetime
 from flask import Blueprint, jsonify, request
 from app import db
 from app.models import User, Appointment, MedicalHistory, NormalRange
@@ -52,18 +53,20 @@ def _classify_message(message):
 
 
 def _gather_patient_context(patient_id):
-    """Gather all patient data to provide as context to the AI."""
+    """Gather all patient data to provide as rich context to the AI."""
     patient = User.query.get(patient_id)
     if not patient:
         return ""
 
+    now = datetime.utcnow()
     parts = []
+    parts.append(f"Today's date: {now.strftime('%Y-%m-%d')}")
     parts.append(f"Patient: {patient.full_name}")
     parts.append(f"Location: {patient.location}")
     if patient.address:
         parts.append(f"Address: {patient.address}")
 
-    # Medical history
+    # ── Medical History ──
     history = MedicalHistory.query.filter_by(patient_id=patient_id)\
         .order_by(MedicalHistory.created_at.desc()).all()
     if history:
@@ -73,12 +76,38 @@ def _gather_patient_context(patient_id):
             if h.notes:
                 parts.append(f"  Notes: {h.notes}")
 
-    # Appointments
-    appointments = Appointment.query.filter_by(patient_id=patient_id)\
-        .order_by(Appointment.appointment_date.desc()).limit(10).all()
-    if appointments:
-        parts.append("\n--- Recent Appointments (up to 10) ---")
-        for a in appointments:
+    # ── Normal Ranges (build lookup for biomarker annotation) ──
+    normal_ranges = NormalRange.query.all()
+    nr_lookup = {}
+    if normal_ranges:
+        parts.append("\n--- Normal Ranges ---")
+        for nr in normal_ranges:
+            name = nr.biomarker_type.replace('_', ' ').title()
+            parts.append(f"- {name}: {nr.min_value}-{nr.max_value} {nr.unit}")
+            nr_lookup[nr.biomarker_type] = (nr.min_value, nr.max_value)
+
+    # ── Appointments (split into upcoming vs past) ──
+    all_appointments = Appointment.query.filter_by(patient_id=patient_id)\
+        .order_by(Appointment.appointment_date.asc()).all()
+
+    upcoming = [a for a in all_appointments if a.appointment_date >= now and a.status not in ('completed', 'cancelled')]
+    past = [a for a in all_appointments if a.appointment_date < now or a.status in ('completed', 'cancelled')]
+
+    if upcoming:
+        parts.append(f"\n--- Upcoming Appointments ({len(upcoming)}) ---")
+        for a in upcoming:
+            date_str = a.appointment_date.strftime('%Y-%m-%d %H:%M') if a.appointment_date else 'N/A'
+            doctor_name = a.doctor.full_name if a.doctor else 'N/A'
+            parts.append(f"- {date_str} with {doctor_name} | Status: {a.status} | Reason: {a.reason or 'N/A'}")
+    else:
+        parts.append("\n--- Upcoming Appointments ---")
+        parts.append("- None scheduled")
+
+    if past:
+        # Show most recent 10 past appointments
+        recent_past = sorted(past, key=lambda a: a.appointment_date, reverse=True)[:10]
+        parts.append(f"\n--- Past Appointments (most recent {len(recent_past)}) ---")
+        for a in recent_past:
             date_str = a.appointment_date.strftime('%Y-%m-%d') if a.appointment_date else 'N/A'
             doctor_name = a.doctor.full_name if a.doctor else 'N/A'
             parts.append(f"- {date_str} with {doctor_name} | Status: {a.status} | Reason: {a.reason or 'N/A'}")
@@ -91,7 +120,7 @@ def _gather_patient_context(patient_id):
                 readings_str = ", ".join(f"{r.biomarker_type}: {r.value} {r.unit}" for r in readings)
                 parts.append(f"  Biomarkers: {readings_str}")
 
-    # Latest biomarker readings
+    # ── Biomarker History with Range Status ──
     completed_appts = Appointment.query.filter_by(
         patient_id=patient_id, status='completed'
     ).order_by(Appointment.appointment_date.asc()).all()
@@ -108,24 +137,26 @@ def _gather_patient_context(patient_id):
             })
 
     if biomarker_history:
-        parts.append("\n--- Biomarker History ---")
+        parts.append("\n--- Biomarker History (with range status) ---")
         for btype, readings in biomarker_history.items():
             latest = readings[-1]
             name = btype.replace('_', ' ').title()
-            parts.append(f"- {name}: Latest {latest['value']} {latest['unit']} ({latest['date']})")
+            # Determine range status
+            status_str = ""
+            if btype in nr_lookup:
+                lo, hi = nr_lookup[btype]
+                if latest['value'] > hi:
+                    status_str = f" ⚠️ HIGH (normal: {lo}-{hi})"
+                elif latest['value'] < lo:
+                    status_str = f" ⚠️ LOW (normal: {lo}-{hi})"
+                else:
+                    status_str = f" ✅ Normal (range: {lo}-{hi})"
+            parts.append(f"- {name}: {latest['value']} {latest['unit']} ({latest['date']}){status_str}")
             if len(readings) > 1:
                 prev = readings[-2]
                 diff = latest['value'] - prev['value']
-                direction = "up" if diff > 0 else "down" if diff < 0 else "unchanged"
-                parts.append(f"  Trend: {direction} (previous: {prev['value']} on {prev['date']})")
-
-    # Normal ranges
-    normal_ranges = NormalRange.query.all()
-    if normal_ranges:
-        parts.append("\n--- Normal Ranges ---")
-        for nr in normal_ranges:
-            name = nr.biomarker_type.replace('_', ' ').title()
-            parts.append(f"- {name}: {nr.min_value}-{nr.max_value} {nr.unit}")
+                direction = "↑ up" if diff > 0 else "↓ down" if diff < 0 else "→ unchanged"
+                parts.append(f"  Trend: {direction} from {prev['value']} on {prev['date']}")
 
     return "\n".join(parts)
 
@@ -139,14 +170,27 @@ Your role:
 - Provide general health education related to the patient's conditions.
 - Be empathetic, clear, and concise.
 
-Important rules:
-- NEVER provide specific medical diagnoses or prescribe treatments. Always recommend consulting their doctor.
-- NEVER discuss topics unrelated to health, medicine, or the patient's CommonCare data. If asked about unrelated topics (politics, entertainment, coding, etc.), politely decline and explain: "That topic isn't related to health or your medical data. I can only help with health-related questions such as your biomarkers, appointments, treatments, and medical conditions."
-- You ARE allowed to provide general health education and information about medical conditions, even if it goes beyond the patient's specific data. For example, explaining what high cholesterol is, its causes, risk factors, lifestyle tips, etc. Use your general medical knowledge to educate the patient, but always tie it back to their data when possible and recommend consulting their doctor for personalized advice.
-- NEVER share or discuss other patients' data. If asked about other patients, explain that you can only access the current patient's data for privacy and security reasons.
+Knowledge & general health education:
+- You ARE encouraged to use your general medical knowledge to answer health questions fully. When a patient asks "why is my blood pressure high?" or "what causes high cholesterol?", give a thorough, helpful answer covering causes, risk factors, lifestyle advice, symptoms to watch for, and when to see a doctor.
+- You CAN explain medical conditions, how biomarkers work, what lifestyle changes help, dietary advice, exercise recommendations, medication categories, and anything else health-related — just like a knowledgeable health educator would.
+- Always tie your general knowledge back to the patient's actual data when relevant. For example, if their diastolic blood pressure is flagged HIGH, explain what that means clinically, what could cause it, and what they should do — referencing their specific reading.
+- When discussing whether a reading is "normal" or "high" or "low", ALWAYS use the normal ranges from the CommonCare data provided below — NOT generic ranges from the internet. The ranges in the patient data are what their healthcare providers have configured for them.
+
+Data rules:
 - Use the patient's actual data provided in context to give personalized responses.
-- When discussing biomarkers, reference the normal ranges and explain if values are within range or not.
+- When discussing biomarkers, ALWAYS check the range status annotations (⚠️ HIGH, ⚠️ LOW, ✅ Normal) and proactively mention when readings are outside normal range. Cite the specific value, the normal range from the data, and explain what it means.
+- When the patient asks about "upcoming" appointments, ONLY show appointments from the "Upcoming Appointments" section. When they ask about past appointments, use the "Past Appointments" section. Do NOT mix these up.
+- NEVER share or discuss other patients' data. If asked about other patients, explain that you can only access the current patient's data for privacy and security reasons.
+
+Safety rules:
+- NEVER provide specific medical diagnoses or prescribe specific medications. Always recommend consulting their doctor for diagnosis and prescription decisions.
+- You CAN suggest general categories of action (e.g., "you may want to discuss blood pressure medication with your doctor", "lifestyle changes like reducing sodium intake can help") — just don't prescribe specific drugs or dosages.
+- If a reading is dangerously out of range, be clear and direct about the urgency of seeing a doctor. Don't downplay serious values.
+- NEVER discuss topics unrelated to health, medicine, or wellness. If asked about unrelated topics, politely decline: "That topic isn't related to health or your medical data. I can help with health-related questions such as your biomarkers, appointments, treatments, and medical conditions."
+
+Formatting:
 - Keep responses concise but informative. Use bullet points for clarity when listing multiple items.
+- Use **bold** for emphasis on key values, warnings, and important advice.
 - Always end with an offer to help further or a suggestion to consult their healthcare provider for medical decisions.
 
 Below is the patient's current health data from CommonCare:
@@ -212,7 +256,7 @@ def chat_with_ai(current_user):
         completion = client.chat.completions.create(
             model="gpt-4o-mini",
             messages=messages,
-            max_tokens=600,
+            max_tokens=1000,
             temperature=0.7,
         )
         ai_response = completion.choices[0].message.content
@@ -225,81 +269,139 @@ def chat_with_ai(current_user):
         })
 
 
+def _extract_section(context, header_keyword):
+    """Extract lines from a specific section of the patient context."""
+    lines = context.split('\n')
+    in_section = False
+    section_lines = []
+    for line in lines:
+        if f'--- {header_keyword}' in line:
+            in_section = True
+            continue
+        if in_section:
+            if line.startswith('---') or (line.startswith('\n---')):
+                break
+            if line.strip():
+                section_lines.append(line)
+    return section_lines
+
+
 def _fallback_response(user_message, patient_context):
-    """Provide a basic response when OpenAI is unavailable."""
+    """Provide a structured response when OpenAI is unavailable.
+    Parses the enriched patient context to give targeted answers."""
     msg = user_message.lower()
 
     if re.search(r'\b(?:hello|hey|greet)\b', msg) or re.search(r'\bhi\b', msg):
         return "Hello! I'm CareBot, your CommonCare health assistant. I can help you understand your biomarkers, review your appointments, and discuss your medical history. What would you like to know?"
 
-    # Condition-specific education (e.g. "tell me more about high cholesterol")
-    if re.search(r'\b(?:tell|more|about|explain|what is|what are)\b', msg):
-        condition_info = {
-            'cholesterol': "**High Cholesterol** is a condition where there's too much cholesterol in your blood. It can increase your risk of heart disease and stroke.\n\n- **Causes**: Diet high in saturated fats, lack of exercise, genetics, obesity\n- **Risk factors**: Family history, poor diet, lack of physical activity, smoking\n- **Management**: Heart-healthy diet, regular exercise, maintaining a healthy weight, and medication if prescribed by your doctor\n\nBased on your records, you have an active diagnosis of High Cholesterol (diagnosed 2024-06-10). Please consult your doctor for a personalized management plan.",
-            'hypertension': "**Hypertension (High Blood Pressure)** is when the force of blood against your artery walls is consistently too high.\n\n- **Causes**: Often develops over years; risk increases with age, obesity, high sodium diet, and stress\n- **Risk factors**: Family history, being overweight, physical inactivity, too much salt, too much alcohol\n- **Management**: Lifestyle changes (diet, exercise, stress reduction), reducing sodium intake, and medications as prescribed\n\nBased on your records, your hypertension status is Managed. Continue following your doctor's recommendations.",
-            'allerg': "**Seasonal Allergies** occur when your immune system overreacts to outdoor allergens like pollen.\n\n- **Common symptoms**: Sneezing, runny nose, itchy eyes, congestion\n- **Triggers**: Pollen from trees, grasses, and weeds; mold spores\n- **Management**: Antihistamines, nasal corticosteroid sprays, avoiding triggers, keeping windows closed during high pollen days\n\nBased on your records, you have active Seasonal Allergies. Talk to your doctor about the best treatment plan for you.",
-        }
-        for keyword, info in condition_info.items():
-            if keyword in msg:
-                return info + "\n\nWould you like to know about another condition or any of your health data?"
+    # ── Upcoming appointments ──
+    if any(w in msg for w in ['upcoming', 'next', 'scheduled', 'future']):
+        section = _extract_section(patient_context, 'Upcoming Appointments')
+        if section and not any('None scheduled' in l for l in section):
+            summary = "\n".join(section)
+            return f"Your upcoming appointments:\n\n{summary}\n\nWould you like more details about any of these?"
+        return "You don't have any upcoming appointments scheduled. You can book one through the 'Book Appointment' tab on your dashboard."
 
-    if any(w in msg for w in ['biomarker', 'reading', 'lab', 'test result', 'blood pressure', 'cholesterol', 'blood sugar']):
-        # Extract biomarker info from context
-        lines = patient_context.split('\n')
-        bio_lines = [l for l in lines if l.startswith('- ') and any(
-            w in l.lower() for w in ['latest', 'trend']
-        )]
-        if bio_lines:
-            summary = "\n".join(bio_lines[:8])
-            return f"Here's a summary of your recent biomarker readings:\n\n{summary}\n\nWould you like me to explain any specific reading? Remember to consult your doctor for medical advice."
+    # ── Past appointments ──
+    if any(w in msg for w in ['past', 'previous', 'history', 'recent']) and any(w in msg for w in ['appointment', 'visit']):
+        section = _extract_section(patient_context, 'Past Appointments')
+        if section:
+            summary = "\n".join(section[:8])
+            return f"Your recent past appointments:\n\n{summary}\n\nWould you like more details about any specific visit?"
+        return "No past appointments found in your records."
+
+    # ── General appointment question (default to upcoming) ──
+    if any(w in msg for w in ['appointment', 'schedule', 'visit']):
+        upcoming = _extract_section(patient_context, 'Upcoming Appointments')
+        has_upcoming = upcoming and not any('None scheduled' in l for l in upcoming)
+        past = _extract_section(patient_context, 'Past Appointments')
+
+        parts = []
+        if has_upcoming:
+            parts.append("**Upcoming appointments:**\n" + "\n".join(upcoming))
+        else:
+            parts.append("**Upcoming appointments:** None scheduled")
+        if past:
+            parts.append("\n**Recent past appointments:**\n" + "\n".join(past[:5]))
+        return "\n".join(parts) + "\n\nWould you like more details about any appointment?"
+
+    # ── Specific biomarker question (e.g. "blood pressure", "cholesterol") ──
+    biomarker_keywords = {
+        'blood pressure': ['blood pressure', 'bp'],
+        'systolic': ['systolic'],
+        'diastolic': ['diastolic'],
+        'heart rate': ['heart rate', 'pulse', 'hr'],
+        'cholesterol': ['cholesterol'],
+        'blood sugar': ['blood sugar', 'glucose'],
+        'vitamin d': ['vitamin d', 'vitamin'],
+        'bmi': ['bmi', 'body mass'],
+        'hba1c': ['hba1c', 'a1c', 'hemoglobin a1c'],
+    }
+
+    bio_section = _extract_section(patient_context, 'Biomarker History')
+    if bio_section:
+        # Check if user is asking about a specific biomarker
+        matched_lines = []
+        for line in bio_section:
+            line_lower = line.lower()
+            for display_name, keywords in biomarker_keywords.items():
+                if any(kw in msg for kw in keywords) and any(kw in line_lower for kw in keywords):
+                    matched_lines.append(line)
+
+        if matched_lines:
+            summary = "\n".join(matched_lines)
+            # Check for any warnings
+            has_warning = any('⚠️' in l for l in matched_lines)
+            advice = ""
+            if has_warning:
+                advice = "\n\n⚠️ **Some readings are outside the normal range.** Please discuss these results with your doctor at your next appointment."
+            else:
+                advice = "\n\n✅ These readings appear to be within normal range."
+            return f"Here's what I found for your readings:\n\n{summary}{advice}\n\nWould you like to know more about what these values mean?"
+
+    # ── General biomarker question ──
+    if any(w in msg for w in ['biomarker', 'reading', 'lab', 'test', 'result', 'blood', 'pressure',
+                               'cholesterol', 'sugar', 'vitamin', 'bmi', 'a1c', 'heart rate',
+                               'diastolic', 'systolic', 'look', 'good', 'bad', 'high', 'low']):
+        if bio_section:
+            summary = "\n".join(bio_section)
+            has_warning = any('⚠️' in l for l in bio_section)
+            advice = ""
+            if has_warning:
+                advice = "\n\n⚠️ **Some readings are flagged as outside normal range** (marked with ⚠️). Please discuss these with your doctor."
+            return f"Here's a summary of your biomarker readings:\n\n{summary}{advice}\n\nAsk me about a specific biomarker for more detail, or consult your doctor for medical advice."
         return "I don't see any biomarker readings in your records yet. Once your doctor records readings during appointments, I'll be able to help you understand them."
 
-    if any(w in msg for w in ['appointment', 'schedule', 'visit', 'doctor', 'upcoming']):
-        lines = patient_context.split('\n')
-        appt_lines = [l for l in lines if l.startswith('- ') and ('Status:' in l)]
-        if appt_lines:
-            summary = "\n".join(appt_lines[:5])
-            return f"Here are your recent appointments:\n\n{summary}\n\nWould you like more details about any specific appointment?"
-        return "I don't see any appointments in your records. You can book one through the 'Book Appointment' tab on your dashboard."
-
+    # ── Treatments ──
     if any(w in msg for w in ['treatment', 'medication', 'medicine', 'prescription']):
-        lines = patient_context.split('\n')
-        treat_lines = [l for l in lines if 'Treatment' in l or 'medication' in l.lower()]
+        past_section = _extract_section(patient_context, 'Past Appointments')
+        treat_lines = [l for l in past_section if 'Treatment' in l or 'treatment' in l.lower()]
         if treat_lines:
             summary = "\n".join(treat_lines[:5])
             return f"Here's information about your treatments:\n\n{summary}\n\nAlways consult your doctor before making changes to your treatment plan."
         return "I can help you understand your treatments once they're recorded in your appointments. Check your completed appointments for treatment details."
 
-    if any(w in msg for w in ['history', 'condition', 'diagnosis']):
-        lines = patient_context.split('\n')
-        hist_lines = [l for l in lines if l.startswith('- ') and ('Status:' in l and 'Diagnosed:' in l)]
-        if hist_lines:
-            summary = "\n".join(hist_lines)
+    # ── Medical conditions ──
+    if any(w in msg for w in ['condition', 'diagnosis', 'medical history', 'diagnosed']):
+        section = _extract_section(patient_context, 'Medical History')
+        if section:
+            summary = "\n".join(section)
             return f"Your medical history:\n\n{summary}\n\nWould you like to know more about any condition?"
         return "No medical history records found. Your doctor can add conditions to your profile during appointments."
 
+    # ── Normal ranges ──
     if any(w in msg for w in ['normal range', 'range', 'normal']):
-        lines = patient_context.split('\n')
-        range_lines = [l for l in lines if l.startswith('- ') and '-' in l[2:]]
-        nr_section = False
-        nr_lines = []
-        for l in lines:
-            if 'Normal Ranges' in l:
-                nr_section = True
-                continue
-            if nr_section and l.startswith('- '):
-                nr_lines.append(l)
-            elif nr_section and l.startswith('\n---'):
-                break
-        if nr_lines:
-            summary = "\n".join(nr_lines[:10])
+        section = _extract_section(patient_context, 'Normal Ranges')
+        if section:
+            summary = "\n".join(section[:12])
             return f"Here are the normal ranges for your biomarkers:\n\n{summary}\n\nI can compare your readings against these ranges if you ask about a specific biomarker."
         return "Normal range information is set by your medical staff. Ask them to configure ranges in the system."
 
+    # ── Summary / overview ──
     if any(w in msg for w in ['summary', 'overview', 'everything', 'all']):
-        return f"Here's an overview of your health profile:\n\n{patient_context[:1500]}\n\nWould you like me to focus on any specific area?"
+        return f"Here's an overview of your health profile:\n\n{patient_context[:2000]}\n\nWould you like me to focus on any specific area?"
 
-    return "I can help you with:\n\n- **Biomarkers** - Understanding your health readings and trends\n- **Appointments** - Reviewing past and upcoming visits\n- **Treatments** - Understanding your treatment plans\n- **Medical History** - Reviewing your conditions\n- **Normal Ranges** - What healthy values look like\n\nWhat would you like to know more about?"
+    return "I can help you with:\n\n- **Biomarkers** — Understanding your health readings, trends, and whether they're in normal range\n- **Appointments** — Reviewing upcoming and past visits\n- **Treatments** — Understanding your treatment plans\n- **Medical History** — Reviewing your conditions\n- **Normal Ranges** — What healthy values look like\n\nWhat would you like to know more about?"
 
 
 @ai_chat.route('/api/ai-chat/context', methods=['GET'])
