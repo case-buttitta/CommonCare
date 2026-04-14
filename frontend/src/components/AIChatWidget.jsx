@@ -134,7 +134,7 @@ export default function AIChatWidget() {
         const data = await res.json();
         setMessages((prev) => [
           ...prev,
-          { from: 'ai', text: data.response, time: new Date(), filtered: data.filtered },
+          { from: 'ai', text: data.response, time: new Date(), filtered: data.filtered, reason: data.reason },
         ]);
       } else {
         const errData = await res.json().catch(() => ({}));
@@ -229,7 +229,12 @@ export default function AIChatWidget() {
               <div className="ai-chat-messages">
                 {messages.map((msg, i) => (
                   <div key={i} className={`ai-msg-wrap ${msg.from}`}>
-                    <div className="ai-msg-bubble">
+                    <div className={`ai-msg-bubble${msg.filtered ? ' ai-msg-filtered' : ''}`}>
+                      {msg.filtered && msg.reason && (
+                        <div className={`ai-msg-filter-label ai-msg-filter-${msg.reason}`}>
+                          {msg.reason === 'privacy' ? '🔒 Privacy Protected' : '📋 Off-Topic'}
+                        </div>
+                      )}
                       <div
                         dangerouslySetInnerHTML={{ __html: formatAIMessage(msg.text) }}
                       />

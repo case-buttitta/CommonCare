@@ -207,6 +207,41 @@
   text-align: right;
 }
 
+/* ── Filtered Message Labels ────────────────────────────────────────────── */
+
+.ai-msg-filtered {
+  border-left: 3px solid #e2e8f0;
+}
+
+.ai-msg-filter-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  padding: 3px 8px;
+  border-radius: 8px;
+  display: inline-block;
+  margin-bottom: 6px;
+}
+
+.ai-msg-filter-privacy {
+  background: #fef2f2;
+  color: #dc2626;
+  border-left-color: #dc2626;
+}
+
+.ai-msg-wrap.ai .ai-msg-bubble.ai-msg-filtered:has(.ai-msg-filter-privacy) {
+  border-left-color: #dc2626;
+}
+
+.ai-msg-filter-off_topic {
+  background: #fefce8;
+  color: #a16207;
+}
+
+.ai-msg-wrap.ai .ai-msg-bubble.ai-msg-filtered:has(.ai-msg-filter-off_topic) {
+  border-left-color: #a16207;
+}
+
 /* ── Typing Indicator ───────────────────────────────────────────────────── */
 
 .ai-typing-indicator {

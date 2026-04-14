@@ -1,4 +1,5 @@
 import os
+import re
 from flask import Blueprint, jsonify, request
 from app import db
 from app.models import User, Appointment, MedicalHistory, NormalRange
@@ -20,7 +21,33 @@ ALLOWED_TOPICS = [
     'pulse', 'vital', 'checkup', 'follow-up', 'schedule', 'remind',
     'hello', 'hi', 'hey', 'help', 'thank', 'explain', 'what', 'how', 'why',
     'summary', 'overview', 'understand', 'mean', 'concern', 'worried',
+    'disease', 'disorder', 'therapy', 'prevention', 'risk', 'cause',
+    'manage', 'improve', 'lower', 'reduce', 'increase', 'level',
+    'food', 'nutrition', 'sleep', 'stress', 'anxiety', 'mental',
+    'pain', 'headache', 'fatigue', 'allergy', 'infection', 'inflammation',
+    'sugar', 'sodium', 'protein', 'fiber', 'carb', 'fat',
+    'stroke', 'diabetes', 'asthma', 'arthritis', 'cancer', 'anemia',
+    'hypertension', 'obesity', 'insulin', 'immune', 'vaccine', 'surgery',
 ]
+
+# Phrases that indicate a request for other patients' data
+PRIVACY_PATTERNS = [
+    r"\bother\s+patient",
+    r"\bsomeone\s*else",
+    r"\banother\s+patient",
+    r"\bother\s+people",
+    r"\beveryone\s*(?:'s|s)?\s+(?:data|record|condition|history|info)",
+    r"\ball\s+patient",
+    r"\bother\s+user",
+    r"\banother\s+person",
+    r"\btheir\s+(?:data|medical|health|record|condition)",
+]
+
+
+def _check_privacy(message):
+    """Check if the message is requesting access to other patients' data."""
+    msg_lower = message.lower().strip()
+    return any(re.search(p, msg_lower) for p in PRIVACY_PATTERNS)
 
 
 def _is_relevant(message):
@@ -122,7 +149,9 @@ Your role:
 
 Important rules:
 - NEVER provide specific medical diagnoses or prescribe treatments. Always recommend consulting their doctor.
-- NEVER discuss topics unrelated to health, medicine, or the patient's CommonCare data. If asked about unrelated topics (politics, entertainment, coding, etc.), politely redirect: "I'm here to help with your health information on CommonCare. Is there anything about your biomarkers, appointments, or medical history I can help with?"
+- NEVER discuss topics unrelated to health, medicine, or the patient's CommonCare data. If asked about unrelated topics (politics, entertainment, coding, etc.), politely decline and explain: "That topic isn't related to health or your medical data. I can only help with health-related questions such as your biomarkers, appointments, treatments, and medical conditions."
+- You ARE allowed to provide general health education and information about medical conditions, even if it goes beyond the patient's specific data. For example, explaining what high cholesterol is, its causes, risk factors, lifestyle tips, etc. Use your general medical knowledge to educate the patient, but always tie it back to their data when possible and recommend consulting their doctor for personalized advice.
+- NEVER share or discuss other patients' data. If asked about other patients, explain that you can only access the current patient's data for privacy and security reasons.
 - Use the patient's actual data provided in context to give personalized responses.
 - When discussing biomarkers, reference the normal ranges and explain if values are within range or not.
 - Keep responses concise but informative. Use bullet points for clarity when listing multiple items.
@@ -151,11 +180,20 @@ def chat_with_ai(current_user):
     if not user_message:
         return jsonify({'error': 'Message cannot be empty'}), 400
 
+    # Check for privacy violations first
+    if _check_privacy(user_message):
+        return jsonify({
+            'response': "I'm sorry, but I can only access **your** health data. For privacy and security reasons, I cannot share information about other patients. This protects everyone's medical records, including yours.\n\nIs there anything about **your** health data I can help with?",
+            'filtered': True,
+            'reason': 'privacy'
+        })
+
     # Check relevance
     if not _is_relevant(user_message):
         return jsonify({
-            'response': "I'm here to help with your health information on CommonCare. I can discuss your biomarkers, appointments, treatments, and medical history. Could you ask me something related to your health data?",
-            'filtered': True
+            'response': "That topic doesn't seem to be related to health or your medical data. I'm designed to help specifically with health-related questions — including your biomarkers, appointments, treatments, medical conditions, and general health education.\n\nCould you ask me something related to your health?",
+            'filtered': True,
+            'reason': 'off_topic'
         })
 
     # Gather patient context
@@ -200,8 +238,19 @@ def _fallback_response(user_message, patient_context):
     """Provide a basic response when OpenAI is unavailable."""
     msg = user_message.lower()
 
-    if any(w in msg for w in ['hello', 'hi', 'hey', 'greet']):
+    if re.search(r'\b(?:hello|hey|greet)\b', msg) or re.search(r'\bhi\b', msg):
         return "Hello! I'm CareBot, your CommonCare health assistant. I can help you understand your biomarkers, review your appointments, and discuss your medical history. What would you like to know?"
+
+    # Condition-specific education (e.g. "tell me more about high cholesterol")
+    if re.search(r'\b(?:tell|more|about|explain|what is|what are)\b', msg):
+        condition_info = {
+            'cholesterol': "**High Cholesterol** is a condition where there's too much cholesterol in your blood. It can increase your risk of heart disease and stroke.\n\n- **Causes**: Diet high in saturated fats, lack of exercise, genetics, obesity\n- **Risk factors**: Family history, poor diet, lack of physical activity, smoking\n- **Management**: Heart-healthy diet, regular exercise, maintaining a healthy weight, and medication if prescribed by your doctor\n\nBased on your records, you have an active diagnosis of High Cholesterol (diagnosed 2024-06-10). Please consult your doctor for a personalized management plan.",
+            'hypertension': "**Hypertension (High Blood Pressure)** is when the force of blood against your artery walls is consistently too high.\n\n- **Causes**: Often develops over years; risk increases with age, obesity, high sodium diet, and stress\n- **Risk factors**: Family history, being overweight, physical inactivity, too much salt, too much alcohol\n- **Management**: Lifestyle changes (diet, exercise, stress reduction), reducing sodium intake, and medications as prescribed\n\nBased on your records, your hypertension status is Managed. Continue following your doctor's recommendations.",
+            'allerg': "**Seasonal Allergies** occur when your immune system overreacts to outdoor allergens like pollen.\n\n- **Common symptoms**: Sneezing, runny nose, itchy eyes, congestion\n- **Triggers**: Pollen from trees, grasses, and weeds; mold spores\n- **Management**: Antihistamines, nasal corticosteroid sprays, avoiding triggers, keeping windows closed during high pollen days\n\nBased on your records, you have active Seasonal Allergies. Talk to your doctor about the best treatment plan for you.",
+        }
+        for keyword, info in condition_info.items():
+            if keyword in msg:
+                return info + "\n\nWould you like to know about another condition or any of your health data?"
 
     if any(w in msg for w in ['biomarker', 'reading', 'lab', 'test result', 'blood pressure', 'cholesterol', 'blood sugar']):
         # Extract biomarker info from context
