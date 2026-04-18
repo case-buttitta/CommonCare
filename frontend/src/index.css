@@ -1,4 +1,9 @@
 :root {
+  /* Dynamic Theme Variables - Task #82 */
+  --primary-color: #3b82f6;   /* Default Blue */
+  --secondary-color: #1e40af; /* Default Dark Blue */
+  --accent-color: #fbbf24;    /* Default Amber */
+  
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -9,9 +14,26 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
+  /* Use the variable for selection or subtle accents if needed */
+  accent-color: var(--primary-color);
 }
 
 #root {
   width: 100%;
   min-height: 100vh;
+}
+
+/* Global overrides to ensure your components 
+   respect the dynamic theme 
+*/
+button.primary-btn, .bg-primary {
+  background-color: var(--primary-color) !important;
+}
+
+.text-primary {
+  color: var(--primary-color) !important;
+}
+
+.sidebar, .navbar {
+  background-color: var(--secondary-color) !important;
 }
