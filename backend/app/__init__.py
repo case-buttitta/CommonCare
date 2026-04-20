@@ -79,12 +79,12 @@ def create_app(config_class=Config):
 
 def _seed_if_needed():
     """Seed test data if the database is empty."""
-    from app.models import (User, Appointment, BiomarkerReading, MedicalHistory,
+    from app.models import (User, Location, Appointment, BiomarkerReading, MedicalHistory,
                             Conversation, Message)
     from datetime import datetime, timedelta
 
     from sqlalchemy.exc import IntegrityError
-    
+
     try:
         if User.query.filter_by(email="patient@test.com").first():
             print("✓ Database already seeded, skipping.")
@@ -95,11 +95,19 @@ def _seed_if_needed():
 
     print("Seeding database...")
 
+    charlotte_location = Location(
+        name="Charlotte Medical Center",
+        address="456 Medical Center Dr, Charlotte, NC 28202",
+    )
+    db.session.add(charlotte_location)
+    db.session.flush()
+
     patient = User(
         email="patient@test.com",
         full_name="John Smith",
         address="123 Main Street, Charlotte, NC",
         location="Charlotte",
+        location_id=charlotte_location.id,
         user_type="patient"
     )
     patient.set_password("password123")
@@ -110,6 +118,7 @@ def _seed_if_needed():
         full_name="Dr. Emily Carter",
         address="456 Medical Center Dr, Charlotte, NC",
         location="Charlotte",
+        location_id=charlotte_location.id,
         user_type="staff"
     )
     doctor.set_password("password123")
@@ -124,6 +133,17 @@ def _seed_if_needed():
     )
     doctor2.set_password("password123")
     db.session.add(doctor2)
+
+    location_admin = User(
+        email="admin@test.com",
+        full_name="Location Admin",
+        address="456 Medical Center Dr, Charlotte, NC",
+        location="Charlotte",
+        location_id=charlotte_location.id,
+        user_type="location_admin"
+    )
+    location_admin.set_password("password123")
+    db.session.add(location_admin)
 
     db.session.flush()
 
@@ -272,7 +292,7 @@ def _seed_if_needed():
 
     try:
         db.session.commit()
-        print("✓ Seed data created: patient@test.com / doctor@test.com / doctor2@test.com (password123)")
+        print("✓ Seed data created: patient@test.com / doctor@test.com / doctor2@test.com / admin@test.com (password123)")
     except IntegrityError:
         db.session.rollback()
         print("✓ Concurrent seed detected. Rolled back gracefully.")

@@ -4,6 +4,7 @@ import Login from './Login'
 import Signup from './Signup'
 import PatientDashboard from './PatientDashboard'
 import StaffDashboard from './StaffDashboard'
+import LocationAdminDashboard from './LocationAdminDashboard'
 import ErrorBoundary from "./ErrorBoundary/ErrorBoundary";
 import AIChatWidget from "./components/AIChatWidget";
 import './App.css'
@@ -26,6 +27,10 @@ function AppContent() {
       return <Signup onSwitchToLogin={() => setShowSignup(false)} />;
     }
     return <Login onSwitchToSignup={() => setShowSignup(true)} />;
+  }
+
+  if (user.user_type === 'location_admin') {
+    return <LocationAdminDashboard />;
   }
 
   if (user.user_type === 'staff') {

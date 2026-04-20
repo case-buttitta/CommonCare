@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify, request
 from app import db
-from app.models import User, Appointment, BiomarkerReading, MedicalHistory
+from app.models import User, Location, Appointment, BiomarkerReading, MedicalHistory
 from app.auth import generate_token, token_required
 from datetime import datetime
 
@@ -23,8 +23,8 @@ def signup():
         if not data or not data.get(field):
             return jsonify({'error': f'{field} is required'}), 400
 
-    if data['user_type'] not in ['patient', 'staff']:
-        return jsonify({'error': 'user_type must be either patient or staff'}), 400
+    if data['user_type'] not in ['patient', 'staff', 'location_admin']:
+        return jsonify({'error': 'user_type must be patient, staff, or location_admin'}), 400
 
     if User.query.filter_by(email=data['email']).first():
         return jsonify({'error': 'Email already registered'}), 400
@@ -443,3 +443,114 @@ def delete_normal_range(current_user, range_id):
     db.session.delete(r)
     db.session.commit()
     return jsonify({'message': 'Normal range deleted'})
+
+
+# ── Location Admin: Theme ────────────────────────────────────────────────────
+
+@main.route('/api/themes', methods=['GET'])
+@token_required
+def get_theme(current_user):
+    if not current_user.location_id:
+        return jsonify({'theme': None})
+    location = Location.query.get(current_user.location_id)
+    if not location:
+        return jsonify({'theme': None})
+    return jsonify(location.to_dict())
+
+
+@main.route('/api/themes', methods=['POST'])
+@token_required
+def save_theme(current_user):
+    if current_user.user_type != 'location_admin':
+        return jsonify({'error': 'Location admin access required'}), 403
+    if not current_user.location_id:
+        return jsonify({'error': 'No location assigned to this admin'}), 400
+
+    data = request.get_json()
+    if not data:
+        return jsonify({'error': 'No data provided'}), 400
+
+    location = Location.query.get(current_user.location_id)
+    if not location:
+        return jsonify({'error': 'Location not found'}), 404
+
+    if 'primary_color' in data:
+        location.primary_color = data['primary_color']
+    if 'secondary_color' in data:
+        location.secondary_color = data['secondary_color']
+    if 'header_color' in data:
+        location.header_color = data['header_color']
+    if 'background_color' in data:
+        location.background_color = data['background_color']
+
+    db.session.commit()
+    return jsonify(location.to_dict())
+
+
+# ── Location Admin: User Management ─────────────────────────────────────────
+
+@main.route('/api/locations/my', methods=['GET'])
+@token_required
+def get_my_location(current_user):
+    if current_user.user_type != 'location_admin':
+        return jsonify({'error': 'Location admin access required'}), 403
+    if not current_user.location_id:
+        return jsonify({'error': 'No location assigned'}), 404
+    location = Location.query.get(current_user.location_id)
+    if not location:
+        return jsonify({'error': 'Location not found'}), 404
+    return jsonify(location.to_dict())
+
+
+@main.route('/api/locations/<int:location_id>/users', methods=['GET'])
+@token_required
+def get_location_users(current_user, location_id):
+    if current_user.user_type != 'location_admin':
+        return jsonify({'error': 'Location admin access required'}), 403
+    if current_user.location_id != location_id:
+        return jsonify({'error': 'Access denied to this location'}), 403
+
+    users = User.query.filter_by(location_id=location_id).all()
+    return jsonify([u.to_dict() for u in users])
+
+
+@main.route('/api/locations/<int:location_id>/users', methods=['POST'])
+@token_required
+def add_user_to_location(current_user, location_id):
+    if current_user.user_type != 'location_admin':
+        return jsonify({'error': 'Location admin access required'}), 403
+    if current_user.location_id != location_id:
+        return jsonify({'error': 'Access denied to this location'}), 403
+
+    data = request.get_json()
+    if not data or not data.get('email'):
+        return jsonify({'error': 'email is required'}), 400
+
+    user = User.query.filter_by(email=data['email']).first()
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    if user.user_type == 'location_admin':
+        return jsonify({'error': 'Cannot add another location admin to a location'}), 400
+
+    user.location_id = location_id
+    db.session.commit()
+    return jsonify(user.to_dict())
+
+
+@main.route('/api/locations/<int:location_id>/users/<int:user_id>', methods=['DELETE'])
+@token_required
+def remove_user_from_location(current_user, location_id, user_id):
+    if current_user.user_type != 'location_admin':
+        return jsonify({'error': 'Location admin access required'}), 403
+    if current_user.location_id != location_id:
+        return jsonify({'error': 'Access denied to this location'}), 403
+
+    user = User.query.get_or_404(user_id)
+    if user.location_id != location_id:
+        return jsonify({'error': 'User is not at this location'}), 400
+    if user.id == current_user.id:
+        return jsonify({'error': 'Cannot remove yourself from the location'}), 400
+
+    user.location_id = None
+    db.session.commit()
+    return jsonify({'message': f'{user.full_name} removed from location'})

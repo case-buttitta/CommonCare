@@ -9,7 +9,7 @@ if sys.stdout.encoding != 'utf-8':
     sys.stdout.reconfigure(encoding='utf-8')
 
 from app import create_app, db
-from app.models import (User, Appointment, BiomarkerReading, MedicalHistory,
+from app.models import (User, Location, Appointment, BiomarkerReading, MedicalHistory,
                         Conversation, Message, MessageReaction, MessageRequest,
                         NormalRange)
 from datetime import datetime, timedelta
@@ -66,12 +66,21 @@ def seed_normal_ranges():
 def seed_data():
     """Seed comprehensive test data."""
 
+    # ── Location ──────────────────────────────────────────────────────────
+    charlotte_location = Location(
+        name="Charlotte Medical Center",
+        address="456 Medical Center Dr, Charlotte, NC 28202",
+    )
+    db.session.add(charlotte_location)
+    db.session.flush()
+
     # ── Users ─────────────────────────────────────────────────────────────
     patient = User(
         email="patient@test.com",
         full_name="John Smith",
         address="123 Main Street, Charlotte, NC",
         location="Charlotte",
+        location_id=charlotte_location.id,
         user_type="patient"
     )
     patient.set_password("password123")
@@ -82,6 +91,7 @@ def seed_data():
         full_name="Dr. Emily Carter",
         address="456 Medical Center Dr, Charlotte, NC",
         location="Charlotte",
+        location_id=charlotte_location.id,
         user_type="staff"
     )
     doctor.set_password("password123")
@@ -96,6 +106,17 @@ def seed_data():
     )
     doctor2.set_password("password123")
     db.session.add(doctor2)
+
+    location_admin = User(
+        email="admin@test.com",
+        full_name="Location Admin",
+        address="456 Medical Center Dr, Charlotte, NC",
+        location="Charlotte",
+        location_id=charlotte_location.id,
+        user_type="location_admin"
+    )
+    location_admin.set_password("password123")
+    db.session.add(location_admin)
 
     db.session.flush()
 
@@ -358,9 +379,10 @@ def seed_data():
 
     db.session.commit()
     print("[OK] Seed data created successfully!")
-    print(f"   Patient: patient@test.com / password123")
-    print(f"   Doctor:  doctor@test.com / password123")
-    print(f"   Doctor2: doctor2@test.com / password123")
+    print(f"   Patient:        patient@test.com / password123")
+    print(f"   Doctor:         doctor@test.com / password123")
+    print(f"   Doctor2:        doctor2@test.com / password123")
+    print(f"   Location Admin: admin@test.com / password123")
     print(f"   Total appointments: {len(created_appts)} completed + 1 pending")
     print(f"   Messages seeded: {len(messages_data)}")
 

@@ -83,6 +83,12 @@ export default function Login({ onSwitchToSignup }) {
                         </div>
                         <button className="btn-quick-login" onClick={() => quickLogin('doctor@test.com')}>Use</button>
                     </div>
+                    <div className="test-account-row">
+                        <div className="test-account-info">
+                            <strong>Location Admin:</strong> admin@test.com
+                        </div>
+                        <button className="btn-quick-login" onClick={() => quickLogin('admin@test.com')}>Use</button>
+                    </div>
                     <div className="test-account-pw">Password: <code>password123</code></div>
                 </div>
 

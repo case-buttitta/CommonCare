@@ -3,6 +3,39 @@ from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
 
+class Location(db.Model):
+    __tablename__ = 'locations'
+
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(200), nullable=False)
+    address = db.Column(db.String(200))
+    primary_color = db.Column(db.String(20), default='#3b82f6')
+    secondary_color = db.Column(db.String(20), default='#1e40af')
+    header_color = db.Column(db.String(20), default='#1e293b')
+    background_color = db.Column(db.String(20), default='#f8fafc')
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    users = db.relationship('User', back_populates='location_ref', lazy='dynamic')
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'address': self.address,
+            'theme': {
+                'colors': {
+                    'primary': self.primary_color,
+                    'secondary': self.secondary_color,
+                    'header': self.header_color,
+                    'background': self.background_color,
+                }
+            }
+        }
+
+    def __repr__(self):
+        return f'<Location {self.name}>'
+
+
 class User(db.Model):
     __tablename__ = 'users'
 
@@ -12,8 +45,11 @@ class User(db.Model):
     full_name = db.Column(db.String(100), nullable=False)
     address = db.Column(db.String(200))
     location = db.Column(db.String(50), nullable=False, default='Charlotte')
+    location_id = db.Column(db.Integer, db.ForeignKey('locations.id'), nullable=True)
     user_type = db.Column(db.String(20), nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+
+    location_ref = db.relationship('Location', back_populates='users', foreign_keys=[location_id])
 
     # Relationships
     patient_appointments = db.relationship(
@@ -48,6 +84,7 @@ class User(db.Model):
             'full_name': self.full_name,
             'address': self.address,
             'location': self.location,
+            'location_id': self.location_id,
             'user_type': self.user_type,
             'created_at': self.created_at.isoformat()
         }
