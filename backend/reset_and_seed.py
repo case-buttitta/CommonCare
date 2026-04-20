@@ -556,8 +556,8 @@ def seed_stress_test_data():
             "address": "2100 Coronary Circle, Charlotte, NC 28207",
             "domain": "piedmontheart",
             "specialty": "cardiology",
-            "primary_color": "#7c2d12", "secondary_color": "#fb923c",
-            "header_color": "#7c2d12", "background_color": "#fff7ed",
+            "primary_color": "#8b2635", "secondary_color": "#b85c6e",
+            "header_color": "#3b1a1a", "background_color": "#fdfaf9",
             "admin": ("Lisa", "Parks"),
             "staff": [
                 ("Marcus", "Webb", "Dr."),    ("Angela", "Torres", "Dr."),
@@ -584,8 +584,8 @@ def seed_stress_test_data():
             "address": "4401 Sharon Road, Charlotte, NC 28211",
             "domain": "southparkorthopedic",
             "specialty": "orthopedics",
-            "primary_color": "#1e3a5f", "secondary_color": "#3b82f6",
-            "header_color": "#1e3a5f", "background_color": "#f0f9ff",
+            "primary_color": "#2c5282", "secondary_color": "#5a8ab5",
+            "header_color": "#1c2b3a", "background_color": "#f6f8fb",
             "admin": ("Marcus", "Delaney"),
             "staff": [
                 ("Susan", "Holt", "Dr."),   ("Craig", "Patel", "Dr."),
@@ -612,8 +612,8 @@ def seed_stress_test_data():
             "address": "1800 Randolph Road, Charlotte, NC 28207",
             "domain": "carolinawomenshealth",
             "specialty": "womens_health",
-            "primary_color": "#831843", "secondary_color": "#ec4899",
-            "header_color": "#831843", "background_color": "#fdf2f8",
+            "primary_color": "#5b3a8a", "secondary_color": "#9171bf",
+            "header_color": "#2e1a47", "background_color": "#faf7ff",
             "admin": ("Janet", "Owens"),
             "staff": [
                 ("Vanessa", "King", "Dr."),   ("Rebecca", "Cheng", "Dr."),
@@ -640,8 +640,8 @@ def seed_stress_test_data():
             "address": "900 NW Trade Street, Charlotte, NC 28202",
             "domain": "uptownpediatrics",
             "specialty": "pediatrics",
-            "primary_color": "#065f46", "secondary_color": "#34d399",
-            "header_color": "#065f46", "background_color": "#f0fdf4",
+            "primary_color": "#1a6b6b", "secondary_color": "#3da8a8",
+            "header_color": "#0d3333", "background_color": "#f0fbfb",
             "admin": ("Daniel", "Cruz"),
             "staff": [
                 ("Anthony", "White", "Dr."),    ("Christina", "Lee", "Dr."),
