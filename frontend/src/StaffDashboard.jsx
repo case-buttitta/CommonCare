@@ -223,7 +223,7 @@ export default function StaffDashboard() {
                         const Logo = brand.Logo;
                         return (
                             <div className="header-brand">
-                                <Logo size={30} color="white" />
+                                <Logo size={30} color={brand.color} />
                                 <div className="header-brand-title">
                                     {user.location_name}
                                     <span className="header-brand-powered">powered by CommonCare</span>

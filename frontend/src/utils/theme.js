@@ -6,9 +6,13 @@ export const applyTheme = (themeData) => {
   if (primary) {
     root.style.setProperty('--primary-color', primary);
     root.style.setProperty('--primary', primary);
-    // Derive a lighter tint (~40% opacity blend toward white)
     root.style.setProperty('--primary-light', _lighten(primary, 0.6));
     root.style.setProperty('--primary-gradient', `linear-gradient(135deg, ${primary} 0%, ${_lighten(primary, 0.25)} 100%)`);
+    // Expose r,g,b components so CSS can use rgba(var(--primary-rgb), alpha)
+    const r = parseInt(primary.slice(1, 3), 16);
+    const g = parseInt(primary.slice(3, 5), 16);
+    const b = parseInt(primary.slice(5, 7), 16);
+    root.style.setProperty('--primary-rgb', `${r}, ${g}, ${b}`);
   }
   if (secondary) root.style.setProperty('--secondary-color', secondary);
   if (header) root.style.setProperty('--header-bg-color', header);

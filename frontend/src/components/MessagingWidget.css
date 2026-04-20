@@ -17,28 +17,28 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: linear-gradient(135deg, #780606 0%, #a31515 100%);
+  background: var(--primary-gradient, linear-gradient(135deg, var(--primary-color, #780606) 0%, var(--primary-color, #a31515) 100%));
   color: #fff;
   border: none;
   border-radius: 12px 12px 0 0;
   font-size: 0.9rem;
   font-weight: 600;
   cursor: pointer;
-  box-shadow: 0 -2px 12px rgba(120, 6, 6, 0.25);
+  box-shadow: 0 -2px 12px rgba(var(--primary-rgb, 120, 6, 6), 0.25);
   transition: background 0.2s, box-shadow 0.2s;
   font-family: inherit;
   position: relative;
 }
 
 .msg-tab-trigger:hover {
-  background: linear-gradient(135deg, #5e0505 0%, #8a1111 100%);
-  box-shadow: 0 -4px 18px rgba(120, 6, 6, 0.35);
+  background: var(--primary-gradient, linear-gradient(135deg, #780606 0%, #a31515 100%)); filter: brightness(0.85);
+  box-shadow: 0 -4px 18px rgba(var(--primary-rgb, 120, 6, 6), 0.35);
 }
 
 .msg-tab-trigger.open {
   border-radius: 0;
   box-shadow: none;
-  background: linear-gradient(135deg, #780606 0%, #a31515 100%);
+  background: var(--primary-gradient, linear-gradient(135deg, var(--primary-color, #780606) 0%, var(--primary-color, #a31515) 100%));
 }
 
 .msg-tab-trigger-icon {
@@ -51,7 +51,7 @@
 
 .msg-tab-trigger-badge {
   background: #fff;
-  color: #780606;
+  color: var(--primary-color, #780606);
   font-size: 0.68rem;
   font-weight: 800;
   min-width: 20px;
@@ -103,7 +103,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 14px 18px;
-  background: linear-gradient(135deg, #780606 0%, #a31515 100%);
+  background: var(--primary-gradient, linear-gradient(135deg, var(--primary-color, #780606) 0%, var(--primary-color, #a31515) 100%));
   color: #fff;
   flex-shrink: 0;
 }
@@ -207,7 +207,7 @@
 }
 
 .msg-tab.active {
-  color: #780606;
+  color: var(--primary-color, #780606);
   background: transparent;
 }
 
@@ -218,7 +218,7 @@
   left: 20%;
   right: 20%;
   height: 3px;
-  background: #780606;
+  background: var(--primary-color, #780606);
   border-radius: 2px;
 }
 
@@ -251,7 +251,7 @@
 .msg-new-btn {
   flex: 1;
   padding: 9px 14px;
-  background: linear-gradient(135deg, #780606 0%, #a31515 100%);
+  background: var(--primary-gradient, linear-gradient(135deg, var(--primary-color, #780606) 0%, var(--primary-color, #a31515) 100%));
   color: #fff;
   border: none;
   border-radius: 9px;
@@ -264,7 +264,7 @@
 
 .msg-new-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 3px 10px rgba(120, 6, 6, 0.3);
+  box-shadow: 0 3px 10px rgba(var(--primary-rgb, 120, 6, 6), 0.3);
 }
 
 .msg-requests-btn {
@@ -314,7 +314,7 @@
   width: 42px;
   height: 42px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #780606 0%, #b33a3a 100%);
+  background: var(--primary-gradient, linear-gradient(135deg, #780606 0%, #b33a3a 100%));
   color: #fff;
   display: flex;
   align-items: center;
@@ -384,7 +384,7 @@
 }
 
 .msg-unread-badge {
-  background: #780606;
+  background: var(--primary-color, #780606);
   color: #fff;
   font-size: 0.68rem;
   font-weight: 700;
@@ -434,10 +434,10 @@
 }
 
 .msg-bubble-wrap.sent .msg-bubble {
-  background: linear-gradient(135deg, #780606 0%, #a31515 100%);
+  background: var(--primary-gradient, linear-gradient(135deg, var(--primary-color, #780606) 0%, var(--primary-color, #a31515) 100%));
   color: #fff;
   border-bottom-right-radius: 4px;
-  box-shadow: 0 1px 4px rgba(120, 6, 6, 0.2);
+  box-shadow: 0 1px 4px rgba(var(--primary-rgb, 120, 6, 6), 0.2);
 }
 
 .msg-bubble-wrap.received .msg-bubble {
@@ -477,8 +477,8 @@
 
 .msg-reference-inline {
   display: inline;
-  background: rgba(120, 6, 6, 0.1);
-  color: #780606;
+  background: rgba(var(--primary-rgb, 120, 6, 6), 0.1);
+  color: var(--primary-color, #780606);
   padding: 2px 8px;
   border-radius: 5px;
   font-size: 0.82rem;
@@ -495,7 +495,7 @@
 }
 
 .msg-reference-inline.clickable:hover {
-  background: rgba(120, 6, 6, 0.2);
+  background: rgba(var(--primary-rgb, 120, 6, 6), 0.2);
   text-decoration-style: solid;
 }
 
@@ -749,7 +749,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 14px 18px;
-  background: linear-gradient(135deg, #780606 0%, #a31515 100%);
+  background: var(--primary-gradient, linear-gradient(135deg, var(--primary-color, #780606) 0%, var(--primary-color, #a31515) 100%));
   color: #fff;
   font-weight: 600;
   font-size: 0.92rem;
@@ -811,7 +811,7 @@
 .msg-ref-detail-highlight {
   font-weight: 700;
   font-size: 1.05rem;
-  color: #780606;
+  color: var(--primary-color, #780606);
 }
 
 .msg-ref-detail-status {
@@ -846,7 +846,7 @@
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.6px;
-  color: #780606;
+  color: var(--primary-color, #780606);
   padding-bottom: 8px;
   border-bottom: 2px solid #fef2f2;
   margin-bottom: 6px;
@@ -959,7 +959,7 @@
   background: #fef2f2;
   border-top: 1px solid #fecaca;
   font-size: 0.82rem;
-  color: #780606;
+  color: var(--primary-color, #780606);
   font-weight: 500;
   flex-shrink: 0;
 }
@@ -969,7 +969,7 @@
   border: none;
   cursor: pointer;
   font-size: 0.85rem;
-  color: #780606;
+  color: var(--primary-color, #780606);
   padding: 2px 4px;
 }
 
@@ -1001,8 +1001,8 @@
 }
 
 .msg-input:focus {
-  border-color: #b33a3a;
-  box-shadow: 0 0 0 2px rgba(120, 6, 6, 0.08);
+  border-color: var(--primary-color, #b33a3a);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb, 120, 6, 6), 0.08);
 }
 
 .msg-input-icon {
@@ -1023,7 +1023,7 @@
 }
 
 .msg-send-btn {
-  background: linear-gradient(135deg, #780606 0%, #a31515 100%);
+  background: var(--primary-gradient, linear-gradient(135deg, var(--primary-color, #780606) 0%, var(--primary-color, #a31515) 100%));
   color: #fff;
   border: none;
   width: 38px;
@@ -1036,7 +1036,7 @@
   justify-content: center;
   transition: transform 0.2s, opacity 0.2s;
   flex-shrink: 0;
-  box-shadow: 0 2px 6px rgba(120, 6, 6, 0.25);
+  box-shadow: 0 2px 6px rgba(var(--primary-rgb, 120, 6, 6), 0.25);
 }
 
 .msg-send-btn:hover:not(:disabled) {
@@ -1235,8 +1235,8 @@
 }
 
 .msg-search-input:focus {
-  border-color: #b33a3a;
-  box-shadow: 0 0 0 2px rgba(120, 6, 6, 0.08);
+  border-color: var(--primary-color, #b33a3a);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb, 120, 6, 6), 0.08);
 }
 
 .msg-search-results {
@@ -1259,7 +1259,7 @@
 
 .msg-search-action {
   padding: 7px 16px;
-  background: linear-gradient(135deg, #780606 0%, #a31515 100%);
+  background: var(--primary-gradient, linear-gradient(135deg, var(--primary-color, #780606) 0%, var(--primary-color, #a31515) 100%));
   color: #fff;
   border: none;
   border-radius: 9px;
@@ -1272,12 +1272,12 @@
 
 .msg-search-action:hover {
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(120, 6, 6, 0.2);
+  box-shadow: 0 2px 8px rgba(var(--primary-rgb, 120, 6, 6), 0.2);
 }
 
 .msg-search-action.request {
   background: #fff;
-  color: #780606;
+  color: var(--primary-color, #780606);
   border: 1.5px solid #DE6464;
 }
 
@@ -1323,13 +1323,13 @@
 }
 
 .msg-req-textarea:focus {
-  border-color: #b33a3a;
-  box-shadow: 0 0 0 2px rgba(120, 6, 6, 0.08);
+  border-color: var(--primary-color, #b33a3a);
+  box-shadow: 0 0 0 2px rgba(var(--primary-rgb, 120, 6, 6), 0.08);
 }
 
 .msg-req-send-btn {
   padding: 12px 18px;
-  background: linear-gradient(135deg, #780606 0%, #a31515 100%);
+  background: var(--primary-gradient, linear-gradient(135deg, var(--primary-color, #780606) 0%, var(--primary-color, #a31515) 100%));
   color: #fff;
   border: none;
   border-radius: 12px;
@@ -1341,7 +1341,7 @@
 
 .msg-req-send-btn:hover {
   transform: translateY(-1px);
-  box-shadow: 0 3px 12px rgba(120, 6, 6, 0.3);
+  box-shadow: 0 3px 12px rgba(var(--primary-rgb, 120, 6, 6), 0.3);
 }
 
 /* ── Scrollbar Styling ─────────────────────────────────────────────────── */
