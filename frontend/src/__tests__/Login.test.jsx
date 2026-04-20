@@ -173,7 +173,8 @@ describe('Login component', () => {
         expect(screen.getByRole('option', { name: 'Charlotte Medical Center' })).toBeInTheDocument()
       );
       await userEvent.selectOptions(screen.getByLabelText(/medical office/i), '1');
-      expect(screen.getByText('Charlotte Medical Center')).toBeInTheDocument();
+      // The branded header renders a .login-brand-name span with the location name
+      expect(document.querySelector('.login-brand-name')).toHaveTextContent('Charlotte Medical Center');
     });
   });
 });
