@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import { getBrand, applyLoginTheme } from './utils/locationBranding';
-
-const API = import.meta.env.VITE_API_URL;
+import { api } from './api';
 
 const ROLE_LABELS = {
   patient: 'Patient',
@@ -22,7 +21,7 @@ export default function Login({ onSwitchToSignup }) {
   const dropdownRef = useRef(null);
 
   useEffect(() => {
-    fetch(`${API}/api/locations/public`)
+    api('/api/locations/public')
       .then((r) => r.json())
       .then((data) => {
         if (Array.isArray(data)) setLocations(data);
