@@ -5,9 +5,9 @@ import { applyTheme } from '../utils/theme';
 const ThemeSettings = ({ locationId, onThemeUpdated }) => {
   const { token } = useAuth();
   const [colors, setColors] = useState({
-    primary_color: '#3b82f6',
-    secondary_color: '#1e40af',
-    header_color: '#1e293b',
+    primary_color: '#780606',
+    secondary_color: '#DE6464',
+    header_color: '#780606',
     background_color: '#f8fafc',
   });
   const [saving, setSaving] = useState(false);
