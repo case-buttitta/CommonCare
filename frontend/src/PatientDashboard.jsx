@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { api } from "./api";
+import { loadAndApplyTheme } from './utils/theme';
 import MedicalHistory from "./components/MedicalHistory";
 import BiomarkerChart from "./components/BiomarkerChart";
 import MessagingWidget from "./components/MessagingWidget";
@@ -58,7 +59,7 @@ export default function PatientDashboard() {
     "Content-Type": "application/json",
   };
 
-  useEffect(() => { fetchData(); }, []);
+  useEffect(() => { fetchData(); loadAndApplyTheme(token); }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -175,7 +176,7 @@ export default function PatientDashboard() {
 
   return (
     <div className="dashboard">
-      <header className="dashboard-header">
+      <header className="dashboard-header" style={{ background: 'var(--header-bg-color, var(--white))' }}>
         <div className="header-left">
           <h1>CommonCare</h1>
           <span className="user-badge patient">Patient</span>

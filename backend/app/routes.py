@@ -119,10 +119,13 @@ def list_staff(current_user):
 @main.route('/api/patients', methods=['GET'])
 @token_required
 def list_patients(current_user):
-    """List all patients. Staff only."""
+    """List patients. Staff only; scoped to their location when assigned."""
     if current_user.user_type != 'staff':
         return jsonify({'error': 'Staff access required'}), 403
-    patients = User.query.filter_by(user_type='patient').all()
+    if current_user.location_id:
+        patients = User.query.filter_by(user_type='patient', location_id=current_user.location_id).all()
+    else:
+        patients = User.query.filter_by(user_type='patient').all()
     return jsonify([p.to_dict() for p in patients])
 
 
@@ -140,6 +143,13 @@ def list_appointments(current_user):
         if patient_id:
             appointments = Appointment.query.filter_by(patient_id=patient_id) \
                 .order_by(Appointment.appointment_date.desc()).all()
+        elif current_user.location_id:
+            loc_patient_ids = db.session.query(User.id).filter_by(
+                user_type='patient', location_id=current_user.location_id
+            ).subquery()
+            appointments = Appointment.query.filter(
+                Appointment.patient_id.in_(loc_patient_ids)
+            ).order_by(Appointment.appointment_date.desc()).all()
         else:
             appointments = Appointment.query \
                 .order_by(Appointment.appointment_date.desc()).all()

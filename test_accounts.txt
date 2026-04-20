@@ -1,0 +1,164 @@
+CommonCare Test Accounts
+========================
+All passwords: password123 (Charlotte Medical Center originals) or password (stress test locations)
+
+
+=== Charlotte Medical Center ===
+Password: password123
+
+location_admin  admin@test.com
+patient         patient@test.com          (John Smith)
+staff           doctor@test.com           (Dr. Emily Carter)
+staff           doctor2@test.com          (Dr. Rajesh Kumar — no location assigned)
+
+
+=== Piedmont Heart Institute ===   [Cardiology]
+Password: password
+
+location_admin  lisa.parks@piedmontheart.com
+
+staff           marcus.webb@piedmontheart.com
+staff           angela.torres@piedmontheart.com
+staff           james.holloway@piedmontheart.com
+staff           priya.nair@piedmontheart.com
+staff           kevin.moss@piedmontheart.com
+
+patient         robert.hill@piedmontheart.com
+patient         sandra.mills@piedmontheart.com
+patient         thomas.byrd@piedmontheart.com
+patient         patricia.cole@piedmontheart.com
+patient         gerald.foster@piedmontheart.com
+patient         nancy.bell@piedmontheart.com
+patient         donald.shaw@piedmontheart.com
+patient         carol.lane@piedmontheart.com
+patient         bruce.hunt@piedmontheart.com
+patient         donna.reid@piedmontheart.com
+patient         kenneth.price@piedmontheart.com
+patient         dorothy.stone@piedmontheart.com
+patient         larry.wade@piedmontheart.com
+patient         betty.ross@piedmontheart.com
+patient         frank.dean@piedmontheart.com
+patient         sharon.grant@piedmontheart.com
+patient         gary.boyd@piedmontheart.com
+patient         helen.black@piedmontheart.com
+patient         raymond.fox@piedmontheart.com
+patient         virginia.nash@piedmontheart.com
+patient         carl.burns@piedmontheart.com
+patient         judith.hayes@piedmontheart.com
+patient         harold.ray@piedmontheart.com
+patient         diane.ward@piedmontheart.com
+patient         philip.cross@piedmontheart.com
+
+
+=== SouthPark Orthopedic ===   [Orthopedics]
+Password: password
+
+location_admin  marcus.delaney@southparkorthopedic.com
+
+staff           susan.holt@southparkorthopedic.com
+staff           craig.patel@southparkorthopedic.com
+staff           grace.wu@southparkorthopedic.com
+staff           aaron.flynn@southparkorthopedic.com
+staff           monica.reyes@southparkorthopedic.com
+
+patient         andrew.stevens@southparkorthopedic.com
+patient         jennifer.blake@southparkorthopedic.com
+patient         michael.carr@southparkorthopedic.com
+patient         laura.griffin@southparkorthopedic.com
+patient         eric.vaughn@southparkorthopedic.com
+patient         amy.hudson@southparkorthopedic.com
+patient         brian.tucker@southparkorthopedic.com
+patient         carolyn.knight@southparkorthopedic.com
+patient         dennis.barker@southparkorthopedic.com
+patient         emma.logan@southparkorthopedic.com
+patient         fiona.murray@southparkorthopedic.com
+patient         george.marsh@southparkorthopedic.com
+patient         hannah.burgess@southparkorthopedic.com
+patient         ian.crawford@southparkorthopedic.com
+patient         julie.powers@southparkorthopedic.com
+patient         keith.chambers@southparkorthopedic.com
+patient         lindsey.arnold@southparkorthopedic.com
+patient         martin.brewer@southparkorthopedic.com
+patient         natalie.osborn@southparkorthopedic.com
+patient         owen.garrett@southparkorthopedic.com
+patient         pamela.stanton@southparkorthopedic.com
+patient         quinn.mercer@southparkorthopedic.com
+patient         rachel.payne@southparkorthopedic.com
+patient         scott.dalton@southparkorthopedic.com
+patient         tina.rowe@southparkorthopedic.com
+
+
+=== Carolina Women's Health ===   [OB/GYN & Women's Health]
+Password: password
+
+location_admin  janet.owens@carolinawomenshealth.com
+
+staff           vanessa.king@carolinawomenshealth.com
+staff           rebecca.cheng@carolinawomenshealth.com
+staff           tanya.brooks@carolinawomenshealth.com
+staff           laura.simmons@carolinawomenshealth.com
+staff           michelle.park@carolinawomenshealth.com
+
+patient         allison.hart@carolinawomenshealth.com
+patient         brittany.pearson@carolinawomenshealth.com
+patient         catherine.bloom@carolinawomenshealth.com
+patient         danielle.vance@carolinawomenshealth.com
+patient         emily.sutton@carolinawomenshealth.com
+patient         felicia.drake@carolinawomenshealth.com
+patient         gina.horton@carolinawomenshealth.com
+patient         harriet.dawson@carolinawomenshealth.com
+patient         ingrid.swann@carolinawomenshealth.com
+patient         jackie.dunn@carolinawomenshealth.com
+patient         katherine.yates@carolinawomenshealth.com
+patient         lindsay.garner@carolinawomenshealth.com
+patient         maya.hollins@carolinawomenshealth.com
+patient         nicole.frost@carolinawomenshealth.com
+patient         olivia.crane@carolinawomenshealth.com
+patient         penelope.bauer@carolinawomenshealth.com
+patient         quinn.archer@carolinawomenshealth.com
+patient         rachel.finney@carolinawomenshealth.com
+patient         samantha.lowe@carolinawomenshealth.com
+patient         tiffany.hess@carolinawomenshealth.com
+patient         ursula.manning@carolinawomenshealth.com
+patient         veronica.caine@carolinawomenshealth.com
+patient         whitney.doyle@carolinawomenshealth.com
+patient         xena.sloane@carolinawomenshealth.com
+patient         yvonne.baxter@carolinawomenshealth.com
+
+
+=== Uptown Pediatrics ===   [Pediatrics]
+Password: password
+
+location_admin  daniel.cruz@uptownpediatrics.com
+
+staff           anthony.white@uptownpediatrics.com
+staff           christina.lee@uptownpediatrics.com
+staff           brendan.walsh@uptownpediatrics.com
+staff           stephanie.morris@uptownpediatrics.com
+staff           justin.palmer@uptownpediatrics.com
+
+patient         aaron.jennings@uptownpediatrics.com
+patient         bella.thornton@uptownpediatrics.com
+patient         connor.hicks@uptownpediatrics.com
+patient         daisy.watkins@uptownpediatrics.com
+patient         ethan.sims@uptownpediatrics.com
+patient         faith.norris@uptownpediatrics.com
+patient         gabriel.howell@uptownpediatrics.com
+patient         hannah.pierce@uptownpediatrics.com
+patient         isaac.caldwell@uptownpediatrics.com
+patient         jade.moreno@uptownpediatrics.com
+patient         kaylee.bolton@uptownpediatrics.com
+patient         lucas.haynes@uptownpediatrics.com
+patient         mia.cantu@uptownpediatrics.com
+patient         nathan.briggs@uptownpediatrics.com
+patient         piper.steele@uptownpediatrics.com
+patient         riley.dawson@uptownpediatrics.com
+patient         sebastian.holt@uptownpediatrics.com
+patient         trinity.avery@uptownpediatrics.com
+patient         ulysses.chen@uptownpediatrics.com
+patient         violet.marsh@uptownpediatrics.com
+patient         william.okafor@uptownpediatrics.com
+patient         xander.petrov@uptownpediatrics.com
+patient         yasmin.alves@uptownpediatrics.com
+patient         zachary.nguyen@uptownpediatrics.com
+patient         zoe.harper@uptownpediatrics.com

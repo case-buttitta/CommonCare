@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
 import { api } from './api';
+import { loadAndApplyTheme } from './utils/theme';
 import MedicalHistory from './components/MedicalHistory';
 import BiomarkerChart from './components/BiomarkerChart';
 import NormalRanges from "./components/NormalRanges";
@@ -59,7 +60,7 @@ export default function StaffDashboard() {
 
     const headers = { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' };
 
-    useEffect(() => { fetchInitialData(); }, []);
+    useEffect(() => { fetchInitialData(); loadAndApplyTheme(token); }, []);
 
     const fetchInitialData = async () => {
         setLoading(true);
@@ -210,7 +211,7 @@ export default function StaffDashboard() {
 
     return (
         <div className="dashboard staff-dashboard">
-            <header className="dashboard-header">
+            <header className="dashboard-header" style={{ background: 'var(--header-bg-color, var(--white))' }}>
                 <div className="header-left">
                     <h1>CommonCare</h1>
                     <span className="user-badge staff">Staff</span>
