@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "./AuthContext";
 import { api } from "./api";
 import { loadAndApplyTheme } from './utils/theme';
+import { getBrand, isCustomBranded, setFavicon } from './utils/locationBranding';
 import MedicalHistory from "./components/MedicalHistory";
 import BiomarkerChart from "./components/BiomarkerChart";
 import MessagingWidget from "./components/MessagingWidget";
@@ -59,7 +60,11 @@ export default function PatientDashboard() {
     "Content-Type": "application/json",
   };
 
-  useEffect(() => { fetchData(); loadAndApplyTheme(token); }, []);
+  useEffect(() => {
+    fetchData();
+    loadAndApplyTheme(token);
+    if (user?.location_name) setFavicon(user.location_name);
+  }, []);
 
   const fetchData = async () => {
     setLoading(true);
@@ -178,7 +183,19 @@ export default function PatientDashboard() {
     <div className="dashboard">
       <header className="dashboard-header" style={{ background: 'var(--header-bg-color, var(--white))' }}>
         <div className="header-left">
-          <h1>CommonCare</h1>
+          {isCustomBranded(user?.location_name) ? (() => {
+            const brand = getBrand(user.location_name);
+            const Logo = brand.Logo;
+            return (
+              <div className="header-brand">
+                <Logo size={30} color="white" />
+                <div className="header-brand-title">
+                  {user.location_name}
+                  <span className="header-brand-powered">powered by CommonCare</span>
+                </div>
+              </div>
+            );
+          })() : <h1>CommonCare</h1>}
           <span className="user-badge patient">Patient</span>
         </div>
         <div className="header-right">

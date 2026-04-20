@@ -1679,3 +1679,179 @@ body {
   color: var(--text-primary);
   font-weight: 600;
 }
+
+/* ── Location select on login page ─────────────────────────────────────── */
+.location-select {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  font-size: 0.95rem;
+  background: white;
+  color: var(--text-primary, #1a202c);
+  cursor: pointer;
+  appearance: auto;
+}
+
+.location-select:focus {
+  outline: none;
+  border-color: var(--primary-color, #780606);
+  box-shadow: 0 0 0 3px rgba(120, 6, 6, 0.1);
+}
+
+/* ── Two-column email dropdown ──────────────────────────────────────────── */
+.email-dropdown {
+  position: relative;
+  width: 100%;
+}
+
+.email-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.625rem 0.875rem;
+  border: 1.5px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.95rem;
+  color: var(--text-primary, #1a202c);
+  user-select: none;
+  min-height: 42px;
+}
+
+.email-dropdown-trigger.open {
+  border-color: var(--primary-color, #780606);
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+  box-shadow: 0 0 0 3px rgba(120, 6, 6, 0.08);
+}
+
+.email-dropdown-trigger:focus {
+  outline: none;
+  border-color: var(--primary-color, #780606);
+}
+
+.email-dropdown-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  color: var(--text-primary, #1a202c);
+}
+
+.email-dropdown-arrow {
+  font-size: 0.7rem;
+  color: var(--text-secondary, #64748b);
+  margin-left: 0.5rem;
+  flex-shrink: 0;
+}
+
+.email-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 1.5px solid var(--primary-color, #780606);
+  border-top: none;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+}
+
+.email-dropdown-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.875rem;
+  cursor: pointer;
+  gap: 0.75rem;
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.12s;
+}
+
+.email-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.email-dropdown-item:hover {
+  background: #f8fafc;
+}
+
+.email-dropdown-item.selected {
+  background: #fef2f2;
+}
+
+.email-dropdown-email {
+  font-size: 0.82rem;
+  color: var(--text-primary, #1a202c);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
+}
+
+.email-dropdown-role {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 20px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.email-dropdown-role.role-patient {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.email-dropdown-role.role-staff {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.email-dropdown-role.role-location_admin {
+  background: #ede9fe;
+  color: #5b21b6;
+}
+
+/* ── Login page branding ────────────────────────────────────────────────── */
+.login-brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.login-brand-name {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--primary-color, #780606);
+}
+
+/* ── Dashboard branded header ───────────────────────────────────────────── */
+.header-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.header-brand-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: white;
+  line-height: 1.2;
+}
+
+.header-brand-powered {
+  font-size: 0.7rem;
+  font-weight: 400;
+  opacity: 0.8;
+  display: block;
+}

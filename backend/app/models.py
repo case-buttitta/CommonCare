@@ -85,6 +85,7 @@ class User(db.Model):
             'address': self.address,
             'location': self.location,
             'location_id': self.location_id,
+            'location_name': self.location_ref.name if self.location_ref else None,
             'user_type': self.user_type,
             'created_at': self.created_at.isoformat()
         }

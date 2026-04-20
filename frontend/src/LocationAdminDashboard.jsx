@@ -3,6 +3,7 @@ import { useAuth } from './AuthContext';
 import { api } from './api';
 import ThemeSettings from './components/ThemeSettings';
 import { loadAndApplyTheme } from './utils/theme';
+import { getBrand, isCustomBranded, setFavicon } from './utils/locationBranding';
 
 export default function LocationAdminDashboard() {
     const { user, token, logout, deleteAccount, updateUser } = useAuth();
@@ -28,6 +29,7 @@ export default function LocationAdminDashboard() {
     useEffect(() => {
         fetchInitialData();
         loadAndApplyTheme(token);
+        if (user?.location_name) setFavicon(user.location_name);
     }, []);
 
     const fetchInitialData = async () => {
@@ -150,7 +152,19 @@ export default function LocationAdminDashboard() {
         <div className="dashboard staff-dashboard">
             <header className="dashboard-header" style={{ background: 'var(--header-bg-color, var(--white))' }}>
                 <div className="header-left">
-                    <h1>CommonCare</h1>
+                    {isCustomBranded(user?.location_name) ? (() => {
+                        const brand = getBrand(user.location_name);
+                        const Logo = brand.Logo;
+                        return (
+                            <div className="header-brand">
+                                <Logo size={30} color="white" />
+                                <div className="header-brand-title">
+                                    {user.location_name}
+                                    <span className="header-brand-powered">powered by CommonCare</span>
+                                </div>
+                            </div>
+                        );
+                    })() : <h1>CommonCare</h1>}
                     <span className="user-badge location-admin">Location Admin</span>
                 </div>
                 <div className="header-right">

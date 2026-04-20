@@ -564,3 +564,19 @@ def remove_user_from_location(current_user, location_id, user_id):
     user.location_id = None
     db.session.commit()
     return jsonify({'message': f'{user.full_name} removed from location'})
+
+
+@main.route('/api/locations/public', methods=['GET'])
+def get_locations_public():
+    locations = Location.query.order_by(Location.id).all()
+    result = []
+    for loc in locations:
+        users = User.query.filter_by(location_id=loc.id).order_by(User.user_type, User.email).all()
+        loc_dict = loc.to_dict()
+        loc_dict['users'] = [
+            {'email': u.email, 'user_type': u.user_type, 'full_name': u.full_name}
+            for u in users
+        ]
+        loc_dict['default_password'] = 'password123' if loc.name == 'Charlotte Medical Center' else 'password'
+        result.append(loc_dict)
+    return jsonify(result)
