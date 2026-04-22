@@ -536,7 +536,7 @@ export default function StaffDashboard() {
     {locationUsers.length > 0 ? (
         <div className="staff-list">
         {locationUsers.map((u) => (
-            <div key={u.id} className="staff-card">
+            <div key={u.id} className="staff-item">
             <div className="staff-icon">🩺</div>
             <div className="staff-name">{u.full_name}</div>
         </div>
