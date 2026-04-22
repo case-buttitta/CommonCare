@@ -1967,5 +1967,5 @@ body {
 .location-address {
   font-size: 0.85rem;
   color: #6b7280;
-  padding-left: 22px; /* aligns under text after emoji */
+  padding-left: 22px;
 }

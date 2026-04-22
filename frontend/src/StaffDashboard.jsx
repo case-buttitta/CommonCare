@@ -27,9 +27,6 @@ export default function StaffDashboard() {
     const [loading, setLoading] = useState(true);
     const [showRecommendations, setShowRecommendations] = useState(false);
 
-    const [locationUsers, setLocationUsers] = useState([]);
-    const [locationAdmin, setLocationAdmin] = useState(null);
-
     const [formBiomarkers, setFormBiomarkers] = useState([]);
     const [formNotes, setFormNotes] = useState('');
     const [formTreatments, setFormTreatments] = useState('');
@@ -73,22 +70,14 @@ export default function StaffDashboard() {
     const fetchInitialData = async () => {
         setLoading(true);
         try {
-            const [pRes, aRes, nrRes, locUsersRes, adminRes] = await Promise.all([
+            const [pRes, aRes, nrRes] = await Promise.all([
                 api('/api/patients', { headers }),
                 api('/api/appointments', { headers }),
-                api('/api/normal-ranges', { headers }),
-                api(`/api/locations/${user.location_id}/staff`, { headers }),
-                api(`/api/locations/${user.location_id}/admin`, { headers }), 
+                api('/api/normal-ranges', { headers }), 
             ]);
             if (pRes.ok) setPatients(await pRes.json());
             if (aRes.ok) setAllAppointments(await aRes.json());
             if (nrRes.ok) setNormalRanges(await nrRes.json());
-            if (locUsersRes?.ok) {
-            setLocationUsers(await locUsersRes.json());
-            }
-            if (adminRes?.ok) {
-            setLocationAdmin(await adminRes.json());
-            }
         } catch (err) { console.error('Failed to fetch data:', err); }
         finally { setLoading(false); }
     };
@@ -221,7 +210,6 @@ export default function StaffDashboard() {
     const navItems = [
         { id: 'patients', label: 'Patients' },
         { id: 'appointments', label: 'Appointments' },
-        { id: 'location', label: 'Location' },
         { id: 'account', label: 'Account' },
         { id: 'normal_ranges', label: 'Normal Ranges' },
     ];
@@ -517,51 +505,6 @@ export default function StaffDashboard() {
                     </section>
                 )}
             </main>
-
-{/* LOCATION VIEW */}
-{activeView === 'location' && (
-<div className="tab-panel">
-    
-    <div className="location-section">
-    <h3 className="section-title">Your Location</h3>
-    <div className="location-card">
-        📍 {user?.location_name || user?.location}
-        {user?.address && (
-        <div className="location-address">
-            {user.address}
-        </div>
-        )}
-    </div>
-        <h3 className="section-title" style={{ marginTop: "1.5rem" }}>
-        Staff Members
-        </h3>
-        {locationUsers.length > 0 ? (
-        <div className="staff-list">
-        {locationUsers.map((u) => (
-            <div key={u.id} className="staff-item">
-            <div className="staff-icon">🩺</div>
-            <div className="staff-name">{u.full_name}</div>
-            </div>
-        ))}
-        </div>
-    ) : (
-        <div className="empty-state">No staff found</div>
-    )}
-    <h3 className="section-title" style={{ marginTop: "1.5rem" }}>
-        Location Administrator
-    </h3>
-    {locationAdmin ? (
-        <div className="admin-card">
-        <div className="admin-icon">🎯</div>
-        <div className="admin-name">{locationAdmin.full_name}</div>
-        <div className="admin-email">{locationAdmin.email}</div>
-        </div>
-    ) : (
-        <div className="empty-state">No admin assigned</div>
-    )}
-    </div>
-    </div>
-)}
 
             {/* APPOINTMENT FILL-OUT MODAL */}
             {selectedAppointment && (
