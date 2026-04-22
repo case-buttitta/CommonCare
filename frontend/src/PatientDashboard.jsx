@@ -41,6 +41,8 @@ export default function PatientDashboard() {
   const [bookingDate, setBookingDate] = useState("");
   const [bookingReason, setBookingReason] = useState("");
   const [bookingSubmitting, setBookingSubmitting] = useState(false);
+  const [locationUsers, setLocationUsers] = useState([]);
+  const [locationAdmin, setLocationAdmin] = useState(null);
 
   const [historyModal, setHistoryModal] = useState(null);
 
@@ -69,16 +71,23 @@ export default function PatientDashboard() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [bioRes, apptRes, staffRes, rangesRes] = await Promise.all([
+      const [bioRes, apptRes, rangesRes, locUsersRes] = await Promise.all([
         api(`/api/patients/${user.id}/biomarkers`, { headers }),
         api("/api/appointments", { headers }),
-        api("/api/staff", { headers }),
         api("/api/normal-ranges", { headers }),
+        api(`/api/locations/${user.location_id}/users`, { headers }),
       ]);
       if (bioRes.ok) setBiomarkers(await bioRes.json());
       if (apptRes.ok) setAppointments(await apptRes.json());
-      if (staffRes.ok) setStaffList(await staffRes.json());
       if (rangesRes.ok) setNormalRanges(await rangesRes.json());
+      if (locUsersRes.ok) {
+      const users = await locUsersRes.json();
+
+      setLocationUsers(users);
+
+      const admin = users.find(u => u.user_type === 'location_admin');
+      setLocationAdmin(admin);
+    }
     } catch (err) {
       console.error("Failed to fetch data:", err);
     } finally {
@@ -176,8 +185,11 @@ export default function PatientDashboard() {
     { id: "overview", label: "Overview" },
     { id: "appointments", label: "Appointments" },
     { id: "book", label: "Book Appointment" },
+    { id: "location", label: "Location" },
     { id: "account", label: "Account" },
   ];
+
+  const locationStaff = locationUsers.filter(u => u.user_type === 'staff');
 
   return (
     <div className="dashboard">
@@ -464,6 +476,55 @@ export default function PatientDashboard() {
                 </form>
               </div>
             )}
+
+{activeTab === "location" && (
+  <div className="tab-panel">
+    <h3 className="section-title">Your Location</h3>
+
+    <div className="location-card">
+      <div className="info-row">
+        <span className="info-label">Location Name</span>
+        <span className="info-value">
+          {user?.location_name || user?.location}
+        </span>
+      </div>
+    </div>
+
+    <h3 className="section-title" style={{ marginTop: "1.5rem" }}>
+      Staff at this Location
+    </h3>
+
+    {locationStaff.length > 0 ? (
+      <div className="staff-list">
+        {locationStaff.map((staff) => (
+          <div key={staff.id} className="staff-item">
+            <div className="staff-name">{staff.full_name}</div>
+            <div className="staff-role">Staff</div>
+          </div>
+        ))}
+      </div>
+    ) : (
+      <div className="empty-state">
+        <p>No staff found.</p>
+      </div>
+    )}
+
+    <h3 className="section-title" style={{ marginTop: "1.5rem" }}>
+      Location Administrator
+    </h3>
+
+    {locationAdmin ? (
+      <div className="admin-card">
+        <div className="admin-name">{locationAdmin.full_name}</div>
+        <div className="admin-email">{locationAdmin.email}</div>
+      </div>
+    ) : (
+      <div className="empty-state">
+        <p>No administrator assigned.</p>
+      </div>
+    )}
+  </div>
+)}
 
             {/* ── ACCOUNT TAB ── */}
             {activeTab === "account" && (
