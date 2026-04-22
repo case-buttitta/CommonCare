@@ -500,19 +500,13 @@ export default function PatientDashboard() {
     </h3>
 
     {locationStaff.length > 0 ? (
-  <div className="staff-grid">
+  <div className="staff-list">
   {locationStaff.map((staff) => (
-    <div key={staff.id} className="staff-card">
-
-      <div className="staff-avatar">
-        <span className="staff-icon">🩺</span>
+    <div key={staff.id} className="staff-item">
+      <div className="staff-name">
+        🩺 {staff.full_name}
       </div>
-
-      <div className="staff-info">
-        <div className="staff-name">Dr. {staff.full_name}</div>
-        <div className="staff-email">{staff.email}</div>
-      </div>
-
+      <div className="staff-role">Staff</div>
     </div>
   ))}
 </div>
