@@ -75,7 +75,7 @@ const fetchData = async () => {
       api(`/api/patients/${user.id}/biomarkers`, { headers }),
       api("/api/appointments", { headers }),
       api("/api/normal-ranges", { headers }),
-      api(`/api/locations/${user.location_id}/users`, { headers }),
+      api(`/api/locations/${user.location_id}/staff`, { headers }),
       api(`/api/locations/${user.location_id}/admin`, { headers }),
     ]);
 
@@ -84,9 +84,9 @@ const fetchData = async () => {
     if (rangesRes.ok) setNormalRanges(await rangesRes.json());
 
     if (locUsersRes.ok) {
-      const users = await locUsersRes.json();
-      console.log("LOCATION USERS:", users);
-      setLocationUsers(users);
+      const staff = await locUsersRes.json();
+      console.log("LOCATION USERS:", staff);
+      setLocationUsers(staff);
     }
 
     if (adminRes.ok) {
