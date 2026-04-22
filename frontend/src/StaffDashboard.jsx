@@ -519,46 +519,54 @@ export default function StaffDashboard() {
             </main>
 
 {/* LOCATION VIEW */}
-{activeView === 'location' && (
-    <div className="tab-panel">
+{activeView === "location" && (
+<div className="tab-panel">
     <h3 className="section-title">Your Location</h3>
-    <div className="location-card">
-        📍 {user?.location_name || user?.location}
-        {user?.address && (
-        <div className="location-address">
-            {user.address}
-        </div>
-        )}
+<div className="location-card">
+<div className="location-title">
+    📍 {user?.location_name || user?.location}
+</div>
+{user?.address && (
+    <div className="location-address">
+        {user.address}
     </div>
-    <h3 className="section-title" style={{ marginTop: "1.5rem" }}>
-        Staff Members
-    </h3>
-    {locationUsers.length > 0 ? (
-        <div className="staff-list">
-        {locationUsers.map((u) => (
-            <div key={u.id} className="staff-item">
-            <div className="staff-icon">🩺</div>
-            <div className="staff-name">{u.full_name}</div>
-        </div>
-        ))}
-    </div>
-    ) : (
-        <div className="empty-state">No staff found</div>
-    )}
-    <h3 className="section-title" style={{ marginTop: "1.5rem" }}>
-        Location Administrator
-    </h3>
-    {locationAdmin ? (
-        <div className="admin-card">
-        <div className="admin-icon">🎯</div>
-        <div className="admin-name">{locationAdmin.full_name}</div>
-        <div className="admin-email">{locationAdmin.email}</div>
-    </div>
-    ) : (
-    <div className="empty-state">No admin assigned</div>
     )}
 </div>
+    <h3 className="section-title" style={{ marginTop: "1.5rem" }}>
+        Staff at this Location
+    </h3>
+    {locationStaff.length > 0 ? (
+<div className="staff-list">
+{locationStaff.map((staff) => (
+    <div key={staff.id} className="staff-item">
+    <div className="staff-name">
+        🩺 {staff.full_name}
+        </div>
+        <div className="staff-role">Staff</div>
+    </div>
+))}
+</div>
+    ) : (
+        <div className="empty-state">
+        <p>No staff found.</p>
+        </div>
+    )}
+<h3 className="section-title" style={{ marginTop: "1rem" }}>
+    Location Administrator
+</h3>
+{locationAdmin ? (
+<div className="admin-card">
+    🎯 <span className="admin-name">{locationAdmin.full_name}</span>
+    <div className="admin-email">{locationAdmin.email}</div>
+</div>
+) : (
+    <div className="empty-state">
+    <p>No administrator assigned.</p>
+    </div>
 )}
+    </div>
+)}
+
 
             {/* APPOINTMENT FILL-OUT MODAL */}
             {selectedAppointment && (
