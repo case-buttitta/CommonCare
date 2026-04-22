@@ -73,7 +73,7 @@ export default function StaffDashboard() {
     const fetchInitialData = async () => {
         setLoading(true);
         try {
-            const [pRes, aRes, nrRes] = await Promise.all([
+            const [pRes, aRes, nrRes, locUsersRes, adminRes] = await Promise.all([
                 api('/api/patients', { headers }),
                 api('/api/appointments', { headers }),
                 api('/api/normal-ranges', { headers }),
