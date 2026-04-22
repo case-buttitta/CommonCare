@@ -531,23 +531,19 @@ export default function StaffDashboard() {
         )}
     </div>
     <h3 className="section-title" style={{ marginTop: "1.5rem" }}>
-        Staff at this Location
-        </h3>
-    {locationStaff.length > 0 ? (
+        Staff Members
+    </h3>
+    {locationUsers.length > 0 ? (
         <div className="staff-list">
-    {locationStaff.map((staff) => (
-        <div key={staff.id} className="staff-item">
-        <div className="staff-name">
-        🩺 {staff.full_name}
+        {locationUsers.map((u) => (
+            <div key={u.id} className="staff-item">
+            <div className="staff-icon">🩺</div>
+            <div className="staff-name">{u.full_name}</div>
         </div>
-    <div className="staff-role">Staff</div>
+        ))}
     </div>
-    ))}
-</div>
     ) : (
-        <div className="empty-state">
-        <p>No staff found.</p>
-        </div>
+        <div className="empty-state">No staff found</div>
     )}
     <h3 className="section-title" style={{ marginTop: "1.5rem" }}>
         Location Administrator
