@@ -520,8 +520,9 @@ export default function StaffDashboard() {
 
 {/* LOCATION VIEW */}
 {activeView === 'location' && (
-    <div className="tab-panel">
-        <div className="locations-container">
+<div className="tab-panel">
+    
+    <div className="location-section">
     <h3 className="section-title">Your Location</h3>
     <div className="location-card">
         📍 {user?.location_name || user?.location}
@@ -531,18 +532,18 @@ export default function StaffDashboard() {
         </div>
         )}
     </div>
-    <h3 className="section-title" style={{ marginTop: "1.5rem" }}>
+        <h3 className="section-title" style={{ marginTop: "1.5rem" }}>
         Staff Members
-    </h3>
-    {locationUsers.length > 0 ? (
+        </h3>
+        {locationUsers.length > 0 ? (
         <div className="staff-list">
         {locationUsers.map((u) => (
             <div key={u.id} className="staff-item">
             <div className="staff-icon">🩺</div>
             <div className="staff-name">{u.full_name}</div>
-        </div>
+            </div>
         ))}
-    </div>
+        </div>
     ) : (
         <div className="empty-state">No staff found</div>
     )}
@@ -554,12 +555,12 @@ export default function StaffDashboard() {
         <div className="admin-icon">🎯</div>
         <div className="admin-name">{locationAdmin.full_name}</div>
         <div className="admin-email">{locationAdmin.email}</div>
-    </div>
+        </div>
     ) : (
-    <div className="empty-state">No admin assigned</div>
+        <div className="empty-state">No admin assigned</div>
     )}
-</div>
-</div>
+    </div>
+    </div>
 )}
 
             {/* APPOINTMENT FILL-OUT MODAL */}
