@@ -85,7 +85,11 @@ export default function PatientDashboard() {
 
       setLocationUsers(users);
 
-      const admin = users.find(u => u.user_type === 'location_admin');
+      const admin = users.find(u =>
+          u.user_type === 'location_admin' ||
+          u.user_type === 'admin' ||
+          u.role === 'admin'
+        );
       setLocationAdmin(admin);
     }
     } catch (err) {
@@ -189,7 +193,11 @@ export default function PatientDashboard() {
     { id: "account", label: "Account" },
   ];
 
-  const locationStaff = locationUsers.filter(u => u.user_type === 'staff');
+  const locationStaff = locationUsers.filter(u =>
+  u.user_type === 'staff' ||
+  u.user_type === 'doctor' ||
+  u.role === 'staff'
+);
 
   return (
     <div className="dashboard">
