@@ -521,6 +521,7 @@ export default function StaffDashboard() {
 {/* LOCATION VIEW */}
 {activeView === 'location' && (
     <div className="tab-panel">
+        <div className="locations-container">
     <h3 className="section-title">Your Location</h3>
     <div className="location-card">
         📍 {user?.location_name || user?.location}
@@ -557,6 +558,7 @@ export default function StaffDashboard() {
     ) : (
     <div className="empty-state">No admin assigned</div>
     )}
+</div>
 </div>
 )}
 
