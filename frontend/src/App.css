@@ -1915,3 +1915,57 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.4px;
 }
+
+.admin-card {
+  background: linear-gradient(135deg, #fff, #f8fafc);
+  border: 2px solid #e5e7eb;
+  border-left: 5px solid #f59e0b;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 10px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.admin-name {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-email {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.location-card {
+  background: #ffffff;
+  border: 1px solid #eaeaea;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.location-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.location-address {
+  font-size: 0.85rem;
+  color: #6b7280;
+  padding-left: 22px; /* aligns under text after emoji */
+}

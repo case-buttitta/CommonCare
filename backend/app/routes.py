@@ -566,6 +566,8 @@ def remove_user_from_location(current_user, location_id, user_id):
     return jsonify({'message': f'{user.full_name} removed from location'})
 
 
+
+# User listing for patient dashboard
 @main.route('/api/locations/public', methods=['GET'])
 def get_locations_public():
     locations = Location.query.order_by(Location.id).all()
@@ -590,3 +592,21 @@ def get_location_staff(current_user, location_id):
     ).all()
 
     return jsonify([u.to_dict() for u in users])
+
+@main.route('/api/locations/<int:location_id>/admin', methods=['GET'])
+@token_required
+def get_location_admin(current_user, location_id):
+    if current_user.user_type != 'patient' and current_user.user_type != 'staff':
+        return jsonify({'error': 'Access denied'}), 403
+
+    location = Location.query.get_or_404(location_id)
+
+    admin = User.query.filter_by(
+        location_id=location.id,
+        user_type='location_admin'
+    ).first()
+
+    if not admin:
+        return jsonify(None)
+
+    return jsonify(admin.to_dict())

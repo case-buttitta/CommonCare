@@ -68,33 +68,39 @@ export default function PatientDashboard() {
     if (user?.location_name) setFavicon(user.location_name);
   }, []);
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const [bioRes, apptRes, rangesRes, locUsersRes] = await Promise.all([
-        api(`/api/patients/${user.id}/biomarkers`, { headers }),
-        api("/api/appointments", { headers }),
-        api("/api/normal-ranges", { headers }),
-        api(`/api/locations/${user.location_id}/staff`, { headers })
-      ]);
-      if (bioRes.ok) setBiomarkers(await bioRes.json());
-      if (apptRes.ok) setAppointments(await apptRes.json());
-      if (rangesRes.ok) setNormalRanges(await rangesRes.json());
-      if (locUsersRes.ok) {
-      const staff = await locUsersRes.json();
+const fetchData = async () => {
+  setLoading(true);
+  try {
+    const [bioRes, apptRes, rangesRes, locUsersRes, adminRes] = await Promise.all([
+      api(`/api/patients/${user.id}/biomarkers`, { headers }),
+      api("/api/appointments", { headers }),
+      api("/api/normal-ranges", { headers }),
+      api(`/api/locations/${user.location_id}/users`, { headers }),
+      api(`/api/locations/${user.location_id}/admin`, { headers }),
+    ]);
 
-      console.log("LOCATION USERS:", staff);
+    if (bioRes.ok) setBiomarkers(await bioRes.json());
+    if (apptRes.ok) setAppointments(await apptRes.json());
+    if (rangesRes.ok) setNormalRanges(await rangesRes.json());
 
-      setLocationUsers(staff);
-
-      setLocationAdmin(null);
+    if (locUsersRes.ok) {
+      const users = await locUsersRes.json();
+      console.log("LOCATION USERS:", users);
+      setLocationUsers(users);
     }
-    } catch (err) {
-      console.error("Failed to fetch data:", err);
-    } finally {
-      setLoading(false);
+
+    if (adminRes.ok) {
+      const admin = await adminRes.json();
+      console.log("LOCATION ADMIN:", admin);
+      setLocationAdmin(admin);
     }
-  };
+
+  } catch (err) {
+    console.error("Failed to fetch data:", err);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const startEditProfile = () => {
     setProfileForm({ full_name: user?.full_name || '', address: user?.address || '', location: user?.location || '' });
@@ -486,14 +492,17 @@ export default function PatientDashboard() {
   <div className="tab-panel">
     <h3 className="section-title">Your Location</h3>
 
-    <div className="location-card">
-      <div className="info-row">
-        <span className="info-label">Location Name</span>
-        <span className="info-value">
-          {user?.location_name || user?.location}
-        </span>
-      </div>
+<div className="location-card">
+  <div className="location-title">
+    📍 {user?.location_name || user?.location}
+  </div>
+
+  {user?.address && (
+    <div className="location-address">
+      {user.address}
     </div>
+  )}
+</div>
 
     <h3 className="section-title" style={{ marginTop: "1.5rem" }}>
       Staff at this Location
@@ -516,20 +525,20 @@ export default function PatientDashboard() {
       </div>
     )}
 
-    <h3 className="section-title" style={{ marginTop: "1.5rem" }}>
-      Location Administrator
-    </h3>
+<h3 className="section-title" style={{ marginTop: "1rem" }}>
+  Location Administrator
+</h3>
 
-    {locationAdmin ? (
-      <div className="admin-card">
-        <div className="admin-name">{locationAdmin.full_name}</div>
-        <div className="admin-email">{locationAdmin.email}</div>
-      </div>
-    ) : (
-      <div className="empty-state">
-        <p>No administrator assigned.</p>
-      </div>
-    )}
+{locationAdmin ? (
+  <div className="admin-card">
+    🎯 <span className="admin-name">{locationAdmin.full_name}</span>
+    <div className="admin-email">{locationAdmin.email}</div>
+  </div>
+) : (
+  <div className="empty-state">
+    <p>No administrator assigned.</p>
+  </div>
+)}
   </div>
 )}
 
