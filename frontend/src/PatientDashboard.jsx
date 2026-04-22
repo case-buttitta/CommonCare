@@ -83,6 +83,8 @@ export default function PatientDashboard() {
       if (locUsersRes.ok) {
       const users = await locUsersRes.json();
 
+      console.log("LOCATION USERS:", users);
+
       setLocationUsers(users);
 
       const admin = users.find(u =>
