@@ -580,3 +580,13 @@ def get_locations_public():
         loc_dict['default_password'] = 'password123' if loc.name == 'Charlotte Medical Center' else 'password'
         result.append(loc_dict)
     return jsonify(result)
+
+@main.route('/api/locations/<int:location_id>/staff', methods=['GET'])
+@token_required
+def get_location_staff(current_user, location_id):
+    users = User.query.filter_by(
+        location_id=location_id,
+        user_type='staff'
+    ).all()
+
+    return jsonify([u.to_dict() for u in users])

@@ -75,24 +75,19 @@ export default function PatientDashboard() {
         api(`/api/patients/${user.id}/biomarkers`, { headers }),
         api("/api/appointments", { headers }),
         api("/api/normal-ranges", { headers }),
-        api(`/api/locations/${user.location_id}/users`, { headers }),
+        api(`/api/locations/${user.location_id}/staff`, { headers })
       ]);
       if (bioRes.ok) setBiomarkers(await bioRes.json());
       if (apptRes.ok) setAppointments(await apptRes.json());
       if (rangesRes.ok) setNormalRanges(await rangesRes.json());
       if (locUsersRes.ok) {
-      const users = await locUsersRes.json();
+      const staff = await locUsersRes.json();
 
-      console.log("LOCATION USERS:", users);
+      console.log("LOCATION USERS:", staff);
 
-      setLocationUsers(users);
+      setLocationUsers(staff);
 
-      const admin = users.find(u =>
-          u.user_type === 'location_admin' ||
-          u.user_type === 'admin' ||
-          u.role === 'admin'
-        );
-      setLocationAdmin(admin);
+      setLocationAdmin(null);
     }
     } catch (err) {
       console.error("Failed to fetch data:", err);
