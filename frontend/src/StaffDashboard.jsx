@@ -18,6 +18,7 @@ export default function StaffDashboard() {
     const [activeView, setActiveView] = useState('patients');
 
     const [patients, setPatients] = useState([]);
+    const [colleagues, setColleagues] = useState([]);
     const [selectedPatient, setSelectedPatient] = useState(null);
     const [patientBiomarkers, setPatientBiomarkers] = useState(null);
     const [patientAppointments, setPatientAppointments] = useState([]);
@@ -70,14 +71,20 @@ export default function StaffDashboard() {
     const fetchInitialData = async () => {
         setLoading(true);
         try {
-            const [pRes, aRes, nrRes] = await Promise.all([
+            const promises = [
                 api('/api/patients', { headers }),
                 api('/api/appointments', { headers }),
-                api('/api/normal-ranges', { headers }), 
-            ]);
+                api('/api/normal-ranges', { headers })
+            ];
+            if (user?.location_id) {
+                promises.push(api(`/api/locations/${user.location_id}/staff`, { headers }));
+            }
+            const results = await Promise.all(promises);
+            const [pRes, aRes, nrRes, cRes] = results;
             if (pRes.ok) setPatients(await pRes.json());
             if (aRes.ok) setAllAppointments(await aRes.json());
             if (nrRes.ok) setNormalRanges(await nrRes.json());
+            if (cRes && cRes.ok) setColleagues(await cRes.json());
         } catch (err) { console.error('Failed to fetch data:', err); }
         finally { setLoading(false); }
     };
@@ -210,6 +217,7 @@ export default function StaffDashboard() {
     const navItems = [
         { id: 'patients', label: 'Patients' },
         { id: 'appointments', label: 'Appointments' },
+        { id: 'colleagues', label: 'Doctors' },
         { id: 'account', label: 'Account' },
         { id: 'normal_ranges', label: 'Normal Ranges' },
     ];
@@ -459,6 +467,28 @@ export default function StaffDashboard() {
                                     </div>
                                 ) : (
                                     <div className="empty-state"><p>No completed appointments.</p></div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* COLLEAGUES VIEW */}
+                        {activeView === 'colleagues' && (
+                            <div className="tab-panel">
+                                <h3 className="section-title">Doctors at {user?.location_name || 'My Location'} ({colleagues.length})</h3>
+                                {colleagues.length > 0 ? (
+                                    <div className="patient-list" style={{ marginTop: '1rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1rem' }}>
+                                        {colleagues.map(doc => (
+                                            <div key={doc.id} className="patient-item" style={{ padding: '1.25rem', cursor: 'default', background: 'var(--white)', border: '1px solid var(--border-color)', borderRadius: 'var(--border-radius)' }}>
+                                                <div className="patient-name" style={{ fontSize: '1.1rem', marginBottom: '0.25rem' }}>{doc.full_name}</div>
+                                                <div className="patient-email" style={{ color: 'var(--text-light)', marginBottom: '0.75rem' }}>{doc.email}</div>
+                                                <div style={{ display: 'flex', gap: '0.5rem', marginTop: 'auto' }}>
+                                                    <span className="user-badge staff" style={{ display: 'inline-block' }}>Staff</span>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="empty-state"><p>No other doctors found at this location.</p></div>
                                 )}
                             </div>
                         )}

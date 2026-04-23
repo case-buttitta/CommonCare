@@ -56,6 +56,9 @@ def create_app(config_class=Config):
     from app.api_history import blp as history_blp
     api.register_blueprint(history_blp)
 
+    from app.api_users import blp as users_blp
+    api.register_blueprint(users_blp)
+
     # Initialize APScheduler
     from apscheduler.schedulers.background import BackgroundScheduler
     from app.tasks import send_appointment_reminders

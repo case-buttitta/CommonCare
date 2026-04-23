@@ -586,6 +586,9 @@ def get_locations_public():
 @main.route('/api/locations/<int:location_id>/staff', methods=['GET'])
 @token_required
 def get_location_staff(current_user, location_id):
+    if current_user.location_id and current_user.location_id != location_id:
+        return jsonify({'error': 'Access denied'}), 403
+
     users = User.query.filter_by(
         location_id=location_id,
         user_type='staff'

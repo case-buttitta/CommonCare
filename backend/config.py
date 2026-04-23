@@ -25,3 +25,16 @@ class Config:
     OPENAPI_URL_PREFIX = "/api/docs"
     OPENAPI_SWAGGER_UI_PATH = "/"
     OPENAPI_SWAGGER_UI_URL = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
+    
+    API_SPEC_OPTIONS = {
+        "components": {
+            "securitySchemes": {
+                "bearerAuth": {
+                    "type": "http",
+                    "scheme": "bearer",
+                    "bearerFormat": "JWT"
+                }
+            }
+        },
+        "security": [{"bearerAuth": []}]
+    }

@@ -14,3 +14,14 @@ class MedicalHistoryUpdateSchema(Schema):
     diagnosis_date = fields.Str(validate=validate.Length(max=100), allow_none=True)
     status = fields.Str(validate=validate.Length(max=50), allow_none=True)
     notes = fields.Str(allow_none=True)
+
+class UserSchema(Schema):
+    id = fields.Int(dump_only=True)
+    email = fields.Str()
+    full_name = fields.Str()
+    user_type = fields.Str()
+    location_id = fields.Int()
+
+class UserQueryArgsSchema(Schema):
+    location_id = fields.Int(required=True, description="Filter users by location ID")
+    user_type = fields.Str(required=False, description="Filter by user type (e.g. staff, patient)")
