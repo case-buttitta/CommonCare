@@ -23,5 +23,5 @@ class UserSchema(Schema):
     location_id = fields.Int()
 
 class UserQueryArgsSchema(Schema):
-    location_id = fields.Int(required=True, description="Filter users by location ID")
-    user_type = fields.Str(required=False, description="Filter by user type (e.g. staff, patient)")
+    location_id = fields.Int(required=True)
+    user_type = fields.Str(required=False)
