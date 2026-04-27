@@ -468,7 +468,7 @@ const fetchData = async () => {
                     <label>Doctor</label>
                     <select value={bookingDoctor} onChange={(e) => setBookingDoctor(e.target.value)} required>
                       <option value="">Select a doctor...</option>
-                      {staffList.map((s) => (
+                      {locationStaff.map((s) => (
                         <option key={s.id} value={s.id}>{s.full_name}</option>
                       ))}
                     </select>
